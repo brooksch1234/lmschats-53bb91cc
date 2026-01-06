@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { 
   MessageCircle, 
   Plus, 
@@ -13,7 +15,8 @@ import {
   LogOut, 
   UserPlus,
   ChevronRight,
-  Hash
+  Hash,
+  Shield
 } from 'lucide-react';
 import {
   Dialog,
@@ -44,6 +47,7 @@ interface Profile {
 
 export default function Chats() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -252,11 +256,21 @@ export default function Chats() {
               <p className="text-xs text-muted-foreground">@{profile?.username}</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+                <Shield className="w-5 h-5 text-primary" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
+
+      {/* Announcement Banner */}
+      <AnnouncementBanner />
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Connection Code Card */}
