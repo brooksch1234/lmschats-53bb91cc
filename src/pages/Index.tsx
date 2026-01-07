@@ -35,10 +35,11 @@ export default function Index() {
           {/* Headline */}
           <div className="text-center space-y-6 animate-slide-up">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
-              <span className="text-foreground">Private chats,</span>
-              <br />
-              <span className="gradient-text">your way</span>
+              <span className="gradient-text">LMS Chats</span>
             </h1>
+            <p className="text-2xl sm:text-3xl text-foreground font-medium -mt-2">
+              Private messaging, your way
+            </p>
             
             <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
               Connect with anyone using unique codes. No phone numbers, no usernames to remember — just simple, secure messaging.
