@@ -169,20 +169,20 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen gradient-bg">
+    <div className="min-h-screen bg-slate-900">
       {/* Header */}
-      <header className="glass-card border-b border-border/50 sticky top-0 z-10">
+      <header className="bg-slate-800/90 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/chats')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/chats')} className="text-slate-300 hover:bg-slate-700 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h1 className="font-semibold text-foreground">Admin Dashboard</h1>
-              <p className="text-xs text-muted-foreground">Developer Tools</p>
+              <h1 className="font-semibold text-white">Admin Dashboard</h1>
+              <p className="text-xs text-slate-400">LMS Chats · Developer Tools</p>
             </div>
           </div>
         </div>
@@ -212,43 +212,42 @@ export default function Admin() {
         </div>
 
         {/* Create Announcement */}
-        <div className="glass-card rounded-2xl p-6 animate-slide-up">
+        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 animate-slide-up">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-              <Megaphone className="w-5 h-5 text-accent-foreground" />
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+              <Megaphone className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">New Announcement</h2>
-              <p className="text-sm text-muted-foreground">Broadcast to all users</p>
+              <h2 className="font-semibold text-white">New Announcement</h2>
+              <p className="text-sm text-slate-400">Broadcast to all users</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title" className="text-slate-300">Title</Label>
               <Input
                 id="title"
                 placeholder="Announcement title..."
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                className="bg-secondary/50"
+                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="content">Message</Label>
+              <Label htmlFor="content" className="text-slate-300">Message</Label>
               <Textarea
                 id="content"
                 placeholder="Write your announcement..."
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
-                className="bg-secondary/50 min-h-[100px]"
+                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
               />
             </div>
             <Button 
-              variant="hero" 
               onClick={handlePostAnnouncement}
               disabled={posting || !newTitle.trim() || !newContent.trim()}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white"
             >
               {posting ? 'Posting...' : (
                 <>
@@ -263,30 +262,30 @@ export default function Admin() {
         {/* Announcements List */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <BarChart3 className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-medium text-muted-foreground">
+            <BarChart3 className="w-4 h-4 text-slate-500" />
+            <h2 className="text-sm font-medium text-slate-400">
               Previous Announcements ({announcements.length})
             </h2>
           </div>
 
           {announcements.length === 0 ? (
-            <div className="glass-card rounded-xl p-8 text-center">
-              <p className="text-muted-foreground">No announcements yet</p>
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-8 text-center">
+              <p className="text-slate-400">No announcements yet</p>
             </div>
           ) : (
             announcements.map((announcement, index) => (
               <div
                 key={announcement.id}
-                className="glass-card rounded-xl p-5 animate-slide-up"
+                className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-5 animate-slide-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground mb-1">{announcement.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">
+                    <h3 className="font-semibold text-white mb-1">{announcement.title}</h3>
+                    <p className="text-sm text-slate-300 mb-3 whitespace-pre-wrap">
                       {announcement.content}
                     </p>
-                    <p className="text-xs text-muted-foreground/70">
+                    <p className="text-xs text-slate-500">
                       {format(new Date(announcement.created_at), 'MMM d, yyyy · h:mm a')}
                     </p>
                   </div>
@@ -294,7 +293,7 @@ export default function Admin() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDeleteAnnouncement(announcement.id)}
-                    className="text-destructive hover:bg-destructive/10 shrink-0"
+                    className="text-red-400 hover:bg-red-500/10 hover:text-red-300 shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -320,17 +319,17 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="glass-card rounded-xl p-5">
+    <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-xl p-5">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+        <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400">
           {icon}
         </div>
       </div>
-      <p className="text-sm text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm text-slate-400 mb-1">{label}</p>
       {loading ? (
-        <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+        <div className="h-8 w-16 bg-slate-700 rounded animate-pulse" />
       ) : (
-        <p className="text-3xl font-bold text-foreground">{value.toLocaleString()}</p>
+        <p className="text-3xl font-bold text-white">{value.toLocaleString()}</p>
       )}
     </div>
   );
