@@ -252,7 +252,7 @@ export default function Chats() {
               <MessageCircle className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-semibold text-foreground">Whisper</h1>
+              <h1 className="font-semibold text-foreground">LMS Chats</h1>
               <p className="text-xs text-muted-foreground">@{profile?.username}</p>
             </div>
           </div>
