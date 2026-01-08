@@ -309,36 +309,32 @@ export default function Chats() {
     setLoadingNearby(true);
 
     try {
-      // Fetch all profiles except current user
-      // In a real implementation, this would filter by network/IP
-      // For now, we show other users as "nearby" (simulated)
-      const { data: allProfiles, error } = await supabase
-        .from('profiles')
-        .select('id, username, connection_code')
-        .neq('id', user.id)
-        .limit(20);
-
-      if (error) {
-        console.error('Error fetching nearby users:', error);
+      // First register our presence
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        console.error('No session token');
         setNearbyUsers([]);
         return;
       }
 
-      // Filter out already connected users
-      const { data: existingConnections } = await supabase
-        .from('connections')
-        .select('user1_id, user2_id')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+      // Register presence
+      await supabase.functions.invoke('nearby-users', {
+        body: { action: 'register' },
+      });
 
-      const connectedUserIds = new Set(
-        (existingConnections || []).flatMap(conn => [conn.user1_id, conn.user2_id])
-      );
+      // Find nearby users
+      const { data, error } = await supabase.functions.invoke('nearby-users', {
+        body: { action: 'find' },
+      });
 
-      const filteredProfiles = (allProfiles || []).filter(
-        p => !connectedUserIds.has(p.id)
-      );
+      if (error) {
+        console.error('Error finding nearby users:', error);
+        setNearbyUsers([]);
+        return;
+      }
 
-      setNearbyUsers(filteredProfiles);
+      console.log('Nearby users response:', data);
+      setNearbyUsers(data?.users || []);
     } catch (err) {
       console.error('Error:', err);
       setNearbyUsers([]);
@@ -346,6 +342,27 @@ export default function Chats() {
       setLoadingNearby(false);
     }
   };
+
+  // Register presence on mount and periodically
+  useEffect(() => {
+    if (!user) return;
+
+    const registerPresence = async () => {
+      try {
+        await supabase.functions.invoke('nearby-users', {
+          body: { action: 'register' },
+        });
+      } catch (err) {
+        console.error('Failed to register presence:', err);
+      }
+    };
+
+    registerPresence();
+    // Re-register every 2 minutes to stay "active"
+    const interval = setInterval(registerPresence, 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Fetch nearby users when dialog opens
   useEffect(() => {
