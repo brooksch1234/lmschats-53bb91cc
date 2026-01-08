@@ -16,16 +16,22 @@ import {
   UserPlus,
   ChevronRight,
   Hash,
-  Shield
+  Shield,
+  Wifi
 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface Connection {
   id: string;
@@ -57,6 +63,8 @@ export default function Chats() {
   const [connectCode, setConnectCode] = useState('');
   const [connecting, setConnecting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [nearbyUsers, setNearbyUsers] = useState<Profile[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -229,6 +237,123 @@ export default function Chats() {
     }
   };
 
+  const connectWithUser = async (targetUserId: string, targetUsername: string) => {
+    if (!user) return;
+    setConnecting(true);
+
+    try {
+      if (targetUserId === user.id) {
+        toast({
+          title: "Invalid",
+          description: "You can't connect with yourself!",
+          variant: "destructive",
+        });
+        setConnecting(false);
+        return;
+      }
+
+      // Check if already connected
+      const { data: existingConnection } = await supabase
+        .from('connections')
+        .select('id')
+        .or(`and(user1_id.eq.${user.id},user2_id.eq.${targetUserId}),and(user1_id.eq.${targetUserId},user2_id.eq.${user.id})`)
+        .maybeSingle();
+
+      if (existingConnection) {
+        toast({
+          title: "Already connected",
+          description: `You're already connected with ${targetUsername}.`,
+          variant: "destructive",
+        });
+        setConnecting(false);
+        return;
+      }
+
+      // Create connection
+      const { error: connectError } = await supabase
+        .from('connections')
+        .insert({
+          user1_id: user.id,
+          user2_id: targetUserId,
+        });
+
+      if (connectError) {
+        toast({
+          title: "Connection failed",
+          description: connectError.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Connected!",
+          description: `You're now connected with ${targetUsername}.`,
+        });
+        setDialogOpen(false);
+        fetchConnections();
+        // Remove from nearby list
+        setNearbyUsers(prev => prev.filter(u => u.id !== targetUserId));
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const fetchNearbyUsers = async () => {
+    if (!user) return;
+    setLoadingNearby(true);
+
+    try {
+      // Fetch all profiles except current user
+      // In a real implementation, this would filter by network/IP
+      // For now, we show other users as "nearby" (simulated)
+      const { data: allProfiles, error } = await supabase
+        .from('profiles')
+        .select('id, username, connection_code')
+        .neq('id', user.id)
+        .limit(20);
+
+      if (error) {
+        console.error('Error fetching nearby users:', error);
+        setNearbyUsers([]);
+        return;
+      }
+
+      // Filter out already connected users
+      const { data: existingConnections } = await supabase
+        .from('connections')
+        .select('user1_id, user2_id')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+
+      const connectedUserIds = new Set(
+        (existingConnections || []).flatMap(conn => [conn.user1_id, conn.user2_id])
+      );
+
+      const filteredProfiles = (allProfiles || []).filter(
+        p => !connectedUserIds.has(p.id)
+      );
+
+      setNearbyUsers(filteredProfiles);
+    } catch (err) {
+      console.error('Error:', err);
+      setNearbyUsers([]);
+    } finally {
+      setLoadingNearby(false);
+    }
+  };
+
+  // Fetch nearby users when dialog opens
+  useEffect(() => {
+    if (dialogOpen) {
+      fetchNearbyUsers();
+    }
+  }, [dialogOpen]);
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
@@ -308,33 +433,79 @@ export default function Chats() {
           <DialogTrigger asChild>
             <Button variant="hero" className="w-full" size="lg">
               <UserPlus className="w-5 h-5" />
-              Connect with Someone
+              Add Friends
             </Button>
           </DialogTrigger>
-          <DialogContent className="glass-card border-border/50">
+          <DialogContent className="glass-card border-border/50 sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Enter Connection Code</DialogTitle>
-              <DialogDescription>
-                Enter the code shared by the person you want to connect with.
-              </DialogDescription>
+              <DialogTitle>Add Friends</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <Input
-                placeholder="Enter 8-character code"
-                value={connectCode}
-                onChange={(e) => setConnectCode(e.target.value)}
-                className="h-12 text-center font-mono tracking-widest uppercase bg-secondary/50"
-                maxLength={8}
-              />
-              <Button 
-                onClick={handleConnect} 
-                disabled={connecting || connectCode.length < 8}
-                className="w-full"
-                variant="hero"
-              >
-                {connecting ? 'Connecting...' : 'Connect'}
-              </Button>
-            </div>
+            <Tabs defaultValue="nearby" className="w-full mt-2">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="nearby">Nearby</TabsTrigger>
+                <TabsTrigger value="code">By Code</TabsTrigger>
+              </TabsList>
+              <TabsContent value="nearby" className="mt-4">
+                <div className="text-sm text-muted-foreground flex items-center gap-2 mb-4">
+                  <Wifi className="w-4 h-4" />
+                  Users on your network
+                </div>
+                {loadingNearby ? (
+                  <div className="py-8 text-center">
+                    <div className="animate-pulse text-muted-foreground">Searching...</div>
+                  </div>
+                ) : nearbyUsers.length === 0 ? (
+                  <div className="py-12 text-center bg-accent/20 rounded-xl">
+                    <Wifi className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="font-medium text-muted-foreground">No nearby users</p>
+                    <p className="text-sm text-muted-foreground/70 mt-1">
+                      Users on the same network will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {nearbyUsers.map((nearbyUser) => (
+                      <button
+                        key={nearbyUser.id}
+                        onClick={() => connectWithUser(nearbyUser.id, nearbyUser.username)}
+                        className="w-full p-3 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center gap-3 transition-colors"
+                        disabled={connecting}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-primary">
+                            {nearbyUser.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="font-medium text-foreground">{nearbyUser.username}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="code" className="mt-4 space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Friend's 8-Digit Code</p>
+                  <Input
+                    placeholder="E.G., ABC12345"
+                    value={connectCode}
+                    onChange={(e) => setConnectCode(e.target.value)}
+                    className="h-12 text-center font-mono tracking-widest uppercase bg-secondary/50"
+                    maxLength={8}
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Enter your friend's unique 8-digit code to send them a friend request.
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleConnect} 
+                  disabled={connecting || connectCode.length < 8}
+                  className="w-full"
+                  variant="hero"
+                >
+                  {connecting ? 'Connecting...' : 'Send Friend Request'}
+                </Button>
+              </TabsContent>
+            </Tabs>
           </DialogContent>
         </Dialog>
 
