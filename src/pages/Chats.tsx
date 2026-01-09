@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
+import { FriendRequests } from '@/components/FriendRequests';
+import { CreateGroupDialog } from '@/components/CreateGroupDialog';
 import { 
   MessageCircle, 
   Plus, 
@@ -17,7 +20,8 @@ import {
   ChevronRight,
   Hash,
   Shield,
-  Wifi
+  Wifi,
+  Users
 } from 'lucide-react';
 import {
   Dialog,
@@ -45,6 +49,14 @@ interface Connection {
   last_message?: string;
 }
 
+interface GroupChat {
+  id: string;
+  name: string;
+  creator_id: string;
+  member_count?: number;
+  last_message?: string;
+}
+
 interface Profile {
   id: string;
   username: string;
@@ -54,10 +66,12 @@ interface Profile {
 export default function Chats() {
   const { user, signOut, loading: authLoading } = useAuth();
   const { isAdmin } = useAdmin();
+  useNotifications(); // Initialize notifications
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [connectCode, setConnectCode] = useState('');
@@ -76,6 +90,7 @@ export default function Chats() {
     if (user) {
       fetchProfile();
       fetchConnections();
+      fetchGroupChats();
     }
   }, [user]);
 
@@ -110,7 +125,6 @@ export default function Chats() {
       return;
     }
 
-    // Fetch other user profiles for each connection
     const connectionsWithProfiles = await Promise.all(
       (connectionsData || []).map(async (conn) => {
         const otherUserId = conn.user1_id === user.id ? conn.user2_id : conn.user1_id;
@@ -121,7 +135,6 @@ export default function Chats() {
           .eq('id', otherUserId)
           .maybeSingle();
 
-        // Get last message
         const { data: lastMessage } = await supabase
           .from('messages')
           .select('content')
@@ -142,6 +155,59 @@ export default function Chats() {
     setLoading(false);
   };
 
+  const fetchGroupChats = async () => {
+    if (!user) return;
+
+    const { data: memberships } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', user.id);
+
+    if (!memberships || memberships.length === 0) {
+      setGroupChats([]);
+      return;
+    }
+
+    const groupIds = memberships.map(m => m.group_id);
+
+    const { data: groups } = await supabase
+      .from('group_chats')
+      .select('*')
+      .in('id', groupIds);
+
+    const groupsWithDetails = await Promise.all(
+      (groups || []).map(async (group) => {
+        const { count } = await supabase
+          .from('group_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('group_id', group.id);
+
+        const { data: lastMsg } = await supabase
+          .from('group_messages')
+          .select('content, message_type')
+          .eq('group_id', group.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let lastMessage = 'No messages yet';
+        if (lastMsg) {
+          if (lastMsg.message_type === 'image') lastMessage = '📷 Image';
+          else if (lastMsg.message_type === 'voice') lastMessage = '🎤 Voice message';
+          else lastMessage = lastMsg.content || '';
+        }
+
+        return {
+          ...group,
+          member_count: count || 0,
+          last_message: lastMessage,
+        };
+      })
+    );
+
+    setGroupChats(groupsWithDetails);
+  };
+
   const copyCode = () => {
     if (profile?.connection_code) {
       navigator.clipboard.writeText(profile.connection_code);
@@ -154,12 +220,56 @@ export default function Chats() {
     }
   };
 
+  const sendFriendRequest = async (targetUserId: string, targetUsername: string) => {
+    if (!user) return;
+
+    // Check if request already exists
+    const { data: existing } = await supabase
+      .from('friend_requests')
+      .select('id, status')
+      .or(`and(from_user_id.eq.${user.id},to_user_id.eq.${targetUserId}),and(from_user_id.eq.${targetUserId},to_user_id.eq.${user.id})`)
+      .maybeSingle();
+
+    if (existing) {
+      toast({
+        title: "Request exists",
+        description: existing.status === 'pending' 
+          ? "A friend request is already pending." 
+          : "You've already interacted with this user.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('friend_requests')
+      .insert({
+        from_user_id: user.id,
+        to_user_id: targetUserId,
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send friend request.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    toast({
+      title: "Request sent!",
+      description: `Friend request sent to ${targetUsername}.`,
+    });
+
+    return true;
+  };
+
   const handleConnect = async () => {
     if (!user || !connectCode.trim()) return;
     setConnecting(true);
 
     try {
-      // Find user with this code
       const { data: targetProfile, error: findError } = await supabase
         .from('profiles')
         .select('id, username')
@@ -203,28 +313,11 @@ export default function Chats() {
         return;
       }
 
-      // Create connection
-      const { error: connectError } = await supabase
-        .from('connections')
-        .insert({
-          user1_id: user.id,
-          user2_id: targetProfile.id,
-        });
-
-      if (connectError) {
-        toast({
-          title: "Connection failed",
-          description: connectError.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Connected!",
-          description: `You're now connected with ${targetProfile.username}.`,
-        });
+      // Send friend request instead of direct connection
+      const sent = await sendFriendRequest(targetProfile.id, targetProfile.username);
+      if (sent) {
         setConnectCode('');
         setDialogOpen(false);
-        fetchConnections();
       }
     } catch (err) {
       toast({
@@ -269,28 +362,10 @@ export default function Chats() {
         return;
       }
 
-      // Create connection
-      const { error: connectError } = await supabase
-        .from('connections')
-        .insert({
-          user1_id: user.id,
-          user2_id: targetUserId,
-        });
-
-      if (connectError) {
-        toast({
-          title: "Connection failed",
-          description: connectError.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Connected!",
-          description: `You're now connected with ${targetUsername}.`,
-        });
+      // Send friend request
+      const sent = await sendFriendRequest(targetUserId, targetUsername);
+      if (sent) {
         setDialogOpen(false);
-        fetchConnections();
-        // Remove from nearby list
         setNearbyUsers(prev => prev.filter(u => u.id !== targetUserId));
       }
     } catch (err) {
@@ -309,7 +384,6 @@ export default function Chats() {
     setLoadingNearby(true);
 
     try {
-      // First register our presence
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.access_token) {
         console.error('No session token');
@@ -317,12 +391,10 @@ export default function Chats() {
         return;
       }
 
-      // Register presence
       await supabase.functions.invoke('nearby-users', {
         body: { action: 'register' },
       });
 
-      // Find nearby users
       const { data, error } = await supabase.functions.invoke('nearby-users', {
         body: { action: 'find' },
       });
@@ -343,7 +415,6 @@ export default function Chats() {
     }
   };
 
-  // Register presence on mount and periodically
   useEffect(() => {
     if (!user) return;
 
@@ -358,13 +429,11 @@ export default function Chats() {
     };
 
     registerPresence();
-    // Re-register every 2 minutes to stay "active"
     const interval = setInterval(registerPresence, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [user]);
 
-  // Fetch nearby users when dialog opens
   useEffect(() => {
     if (dialogOpen) {
       fetchNearbyUsers();
@@ -399,6 +468,7 @@ export default function Chats() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <FriendRequests />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
                 <Shield className="w-5 h-5 text-primary" />
@@ -411,7 +481,6 @@ export default function Chats() {
         </div>
       </header>
 
-      {/* Announcement Banner */}
       <AnnouncementBanner />
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -445,91 +514,123 @@ export default function Chats() {
           </div>
         </div>
 
-        {/* Add Connection Button */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="hero" className="w-full" size="lg">
-              <UserPlus className="w-5 h-5" />
-              Add Friends
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="glass-card border-border/50 sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add Friends</DialogTitle>
-            </DialogHeader>
-            <Tabs defaultValue="nearby" className="w-full mt-2">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="nearby">Nearby</TabsTrigger>
-                <TabsTrigger value="code">By Code</TabsTrigger>
-              </TabsList>
-              <TabsContent value="nearby" className="mt-4">
-                <div className="text-sm text-muted-foreground flex items-center gap-2 mb-4">
-                  <Wifi className="w-4 h-4" />
-                  Users on your network
-                </div>
-                {loadingNearby ? (
-                  <div className="py-8 text-center">
-                    <div className="animate-pulse text-muted-foreground">Searching...</div>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="hero" size="lg">
+                <UserPlus className="w-5 h-5" />
+                Add Friends
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="glass-card border-border/50 sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add Friends</DialogTitle>
+              </DialogHeader>
+              <Tabs defaultValue="nearby" className="w-full mt-2">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="nearby">Nearby</TabsTrigger>
+                  <TabsTrigger value="code">By Code</TabsTrigger>
+                </TabsList>
+                <TabsContent value="nearby" className="mt-4">
+                  <div className="text-sm text-muted-foreground flex items-center gap-2 mb-4">
+                    <Wifi className="w-4 h-4" />
+                    Users on your network
                   </div>
-                ) : nearbyUsers.length === 0 ? (
-                  <div className="py-12 text-center bg-accent/20 rounded-xl">
-                    <Wifi className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="font-medium text-muted-foreground">No nearby users</p>
-                    <p className="text-sm text-muted-foreground/70 mt-1">
-                      Users on the same network will appear here
+                  {loadingNearby ? (
+                    <div className="py-8 text-center">
+                      <div className="animate-pulse text-muted-foreground">Searching...</div>
+                    </div>
+                  ) : nearbyUsers.length === 0 ? (
+                    <div className="py-12 text-center bg-accent/20 rounded-xl">
+                      <Wifi className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                      <p className="font-medium text-muted-foreground">No nearby users</p>
+                      <p className="text-sm text-muted-foreground/70 mt-1">
+                        Users on the same network will appear here
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {nearbyUsers.map((nearbyUser) => (
+                        <button
+                          key={nearbyUser.id}
+                          onClick={() => connectWithUser(nearbyUser.id, nearbyUser.username)}
+                          className="w-full p-3 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center gap-3 transition-colors"
+                          disabled={connecting}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-primary">
+                              {nearbyUser.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="font-medium text-foreground">{nearbyUser.username}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="code" className="mt-4 space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Friend's 8-Digit Code</p>
+                    <Input
+                      placeholder="E.G., ABC12345"
+                      value={connectCode}
+                      onChange={(e) => setConnectCode(e.target.value)}
+                      className="h-12 text-center font-mono tracking-widest uppercase bg-secondary/50"
+                      maxLength={8}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Enter your friend's unique 8-digit code to send them a friend request.
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {nearbyUsers.map((nearbyUser) => (
-                      <button
-                        key={nearbyUser.id}
-                        onClick={() => connectWithUser(nearbyUser.id, nearbyUser.username)}
-                        className="w-full p-3 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center gap-3 transition-colors"
-                        disabled={connecting}
-                      >
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-primary">
-                            {nearbyUser.username.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="font-medium text-foreground">{nearbyUser.username}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="code" className="mt-4 space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Friend's 8-Digit Code</p>
-                  <Input
-                    placeholder="E.G., ABC12345"
-                    value={connectCode}
-                    onChange={(e) => setConnectCode(e.target.value)}
-                    className="h-12 text-center font-mono tracking-widest uppercase bg-secondary/50"
-                    maxLength={8}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Enter your friend's unique 8-digit code to send them a friend request.
+                  <Button 
+                    onClick={handleConnect} 
+                    disabled={connecting || connectCode.length < 8}
+                    className="w-full"
+                    variant="hero"
+                  >
+                    {connecting ? 'Sending...' : 'Send Friend Request'}
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
+
+          <CreateGroupDialog onGroupCreated={fetchGroupChats} />
+        </div>
+
+        {/* Group Chats */}
+        {groupChats.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground px-1">
+              Group Chats ({groupChats.length})
+            </h2>
+            {groupChats.map((group, index) => (
+              <button
+                key={group.id}
+                onClick={() => navigate(`/group/${group.id}`)}
+                className="w-full glass-card rounded-xl p-4 flex items-center gap-4 hover:bg-accent/50 transition-all duration-200 group animate-slide-up"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <h3 className="font-medium text-foreground truncate">{group.name}</h3>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {group.member_count} members • {group.last_message}
                   </p>
                 </div>
-                <Button 
-                  onClick={handleConnect} 
-                  disabled={connecting || connectCode.length < 8}
-                  className="w-full"
-                  variant="hero"
-                >
-                  {connecting ? 'Connecting...' : 'Send Friend Request'}
-                </Button>
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Connections List */}
+        {/* Direct Conversations */}
         <div className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground px-1">
-            Conversations ({connections.length})
+            Direct Messages ({connections.length})
           </h2>
           
           {loading ? (
