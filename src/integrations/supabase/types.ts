@@ -59,12 +59,132 @@ export type Database = {
         }
         Relationships: []
       }
+      friend_requests: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          status: string
+          to_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          status?: string
+          to_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          status?: string
+          to_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      group_chats: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          group_id: string
+          id: string
+          media_url: string | null
+          message_type: string
+          sender_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          media_url?: string | null
+          message_type?: string
+          sender_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          media_url?: string | null
+          message_type?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           connection_id: string
           content: string
           created_at: string
           id: string
+          media_url: string | null
+          message_type: string
           sender_id: string
         }
         Insert: {
@@ -72,6 +192,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          media_url?: string | null
+          message_type?: string
           sender_id: string
         }
         Update: {
@@ -79,6 +201,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          media_url?: string | null
+          message_type?: string
           sender_id?: string
         }
         Relationships: [
