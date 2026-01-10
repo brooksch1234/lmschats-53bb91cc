@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
-import { FriendRequests } from '@/components/FriendRequests';
 import { CreateGroupDialog } from '@/components/CreateGroupDialog';
 import { NotificationBell } from '@/components/NotificationBell';
 import { 
@@ -470,7 +469,6 @@ export default function Chats() {
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
-            <FriendRequests />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
                 <Shield className="w-5 h-5 text-primary" />
