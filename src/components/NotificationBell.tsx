@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
+import { Bell, Check, X, MessageCircle, UserPlus } from 'lucide-react';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface UnreadItem {
   type: 'connection' | 'group';
@@ -19,30 +24,45 @@ interface UnreadItem {
   lastMessage?: string;
 }
 
+interface FriendRequest {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  status: string;
+  created_at: string;
+  from_user?: {
+    username: string;
+  };
+}
+
 export function NotificationBell() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  
+  // Unread messages state
   const [unreadItems, setUnreadItems] = useState<UnreadItem[]>([]);
   const [totalUnread, setTotalUnread] = useState(0);
-  const [open, setOpen] = useState(false);
+  
+  // Friend requests state
+  const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   const fetchUnreadCounts = async () => {
     if (!user) return;
 
     try {
-      // Get user's connections
       const { data: connections } = await supabase
         .from('connections')
         .select('id, user1_id, user2_id')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
 
-      // Get user's group memberships
       const { data: memberships } = await supabase
         .from('group_members')
         .select('group_id')
         .eq('user_id', user.id);
 
-      // Get read timestamps
       const { data: reads } = await supabase
         .from('message_reads')
         .select('*')
@@ -56,7 +76,6 @@ export function NotificationBell() {
 
       const items: UnreadItem[] = [];
 
-      // Count unread direct messages
       for (const conn of connections || []) {
         const lastRead = readMap.get(`conn-${conn.id}`) || new Date(0);
         
@@ -87,7 +106,6 @@ export function NotificationBell() {
         }
       }
 
-      // Count unread group messages
       for (const membership of memberships || []) {
         const lastRead = readMap.get(`group-${membership.group_id}`) || new Date(0);
         
@@ -129,28 +147,105 @@ export function NotificationBell() {
     }
   };
 
+  const fetchRequests = async () => {
+    if (!user) return;
+    setLoadingRequests(true);
+
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .select('*')
+      .eq('to_user_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching requests:', error);
+      setLoadingRequests(false);
+      return;
+    }
+
+    const requestsWithProfiles = await Promise.all(
+      (data || []).map(async (req) => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', req.from_user_id)
+          .maybeSingle();
+        
+        return { ...req, from_user: profile || undefined };
+      })
+    );
+
+    setRequests(requestsWithProfiles);
+    setLoadingRequests(false);
+  };
+
   useEffect(() => {
     if (user) {
       fetchUnreadCounts();
+      fetchRequests();
 
-      // Refresh every 30 seconds
       const interval = setInterval(fetchUnreadCounts, 30000);
 
-      // Also listen for new messages
-      const channel = supabase
-        .channel('unread-notifications')
+      const messagesChannel = supabase
+        .channel('unified-notifications')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, fetchUnreadCounts)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages' }, fetchUnreadCounts)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friend_requests', filter: `to_user_id=eq.${user.id}` }, () => {
+          fetchRequests();
+          toast({ title: "New friend request!", description: "Someone wants to connect with you." });
+        })
         .subscribe();
 
       return () => {
         clearInterval(interval);
-        supabase.removeChannel(channel);
+        supabase.removeChannel(messagesChannel);
       };
     }
   }, [user]);
 
-  const handleItemClick = (item: UnreadItem) => {
+  const handleAccept = async (request: FriendRequest) => {
+    if (!user) return;
+
+    const { error: updateError } = await supabase
+      .from('friend_requests')
+      .update({ status: 'accepted' })
+      .eq('id', request.id);
+
+    if (updateError) {
+      toast({ title: "Error", description: "Failed to accept request.", variant: "destructive" });
+      return;
+    }
+
+    const { error: connError } = await supabase
+      .from('connections')
+      .insert({ user1_id: request.from_user_id, user2_id: user.id });
+
+    if (connError) {
+      toast({ title: "Error", description: "Failed to create connection.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Request accepted!", description: `You're now connected with ${request.from_user?.username || 'this user'}.` });
+    setRequests(prev => prev.filter(r => r.id !== request.id));
+  };
+
+  const handleDecline = async (request: FriendRequest) => {
+    const { error } = await supabase
+      .from('friend_requests')
+      .update({ status: 'declined' })
+      .eq('id', request.id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to decline request.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Request declined" });
+    setRequests(prev => prev.filter(r => r.id !== request.id));
+  };
+
+  const handleMessageClick = (item: UnreadItem) => {
     setOpen(false);
     if (item.type === 'connection') {
       navigate(`/chat/${item.id}`);
@@ -159,65 +254,149 @@ export function NotificationBell() {
     }
   };
 
+  const totalNotifications = totalUnread + requests.length;
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />
-          {totalUnread > 0 && (
-            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-              {totalUnread > 99 ? '99+' : totalUnread}
-            </span>
+          {totalNotifications > 0 && (
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground">
+              {totalNotifications > 99 ? '99+' : totalNotifications}
+            </Badge>
           )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-3 border-b border-border">
-          <h3 className="font-semibold text-foreground">Unread Messages</h3>
-        </div>
-        <ScrollArea className="max-h-80">
-          {unreadItems.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground">
-              <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No unread messages</p>
-            </div>
-          ) : (
-            <div className="p-1">
-              {unreadItems.map((item) => (
-                <button
-                  key={`${item.type}-${item.id}`}
-                  onClick={() => handleItemClick(item)}
-                  className="w-full p-3 rounded-lg hover:bg-secondary/50 text-left transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-xs font-semibold text-primary">
-                          {item.name.charAt(0).toUpperCase()}
+      </SheetTrigger>
+      <SheetContent className="glass-card border-border/50 p-0">
+        <SheetHeader className="p-4 border-b border-border/50">
+          <SheetTitle>Notifications</SheetTitle>
+        </SheetHeader>
+        
+        <Tabs defaultValue="messages" className="w-full">
+          <TabsList className="w-full rounded-none border-b border-border/50 bg-transparent h-12">
+            <TabsTrigger value="messages" className="flex-1 gap-2 data-[state=active]:bg-secondary/50">
+              <MessageCircle className="w-4 h-4" />
+              Messages
+              {totalUnread > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                  {totalUnread}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="requests" className="flex-1 gap-2 data-[state=active]:bg-secondary/50">
+              <UserPlus className="w-4 h-4" />
+              Requests
+              {requests.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                  {requests.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="messages" className="m-0">
+            <ScrollArea className="h-[calc(100vh-180px)]">
+              {unreadItems.length === 0 ? (
+                <div className="p-8 text-center">
+                  <MessageCircle className="w-10 h-10 mx-auto mb-2 text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">No unread messages</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {unreadItems.map((item) => (
+                    <button
+                      key={`${item.type}-${item.id}`}
+                      onClick={() => handleMessageClick(item)}
+                      className="w-full p-3 rounded-lg hover:bg-secondary/50 text-left transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-sm font-semibold text-primary">
+                            {item.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground text-sm truncate">
+                              {item.name}
+                            </p>
+                            {item.type === 'group' && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">Group</Badge>
+                            )}
+                          </div>
+                          {item.lastMessage && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {item.lastMessage}
+                            </p>
+                          )}
+                        </div>
+                        <Badge className="shrink-0 bg-primary text-primary-foreground">
+                          {item.count}
+                        </Badge>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="requests" className="m-0">
+            <ScrollArea className="h-[calc(100vh-180px)]">
+              {loadingRequests ? (
+                <div className="p-8 text-center">
+                  <div className="animate-pulse text-muted-foreground">Loading...</div>
+                </div>
+              ) : requests.length === 0 ? (
+                <div className="p-8 text-center">
+                  <UserPlus className="w-10 h-10 mx-auto mb-2 text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">No pending requests</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {requests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-sm font-semibold text-primary">
+                          {request.from_user?.username?.charAt(0).toUpperCase() || '?'}
                         </span>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground text-sm">
-                          {item.name}
-                          {item.type === 'group' && <span className="text-muted-foreground ml-1">(Group)</span>}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">
+                          {request.from_user?.username || 'Unknown user'}
                         </p>
-                        {item.lastMessage && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[180px]">
-                            {item.lastMessage}
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground">wants to connect</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                          onClick={() => handleAccept(request)}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                          onClick={() => handleDecline(request)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                    <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5 font-medium">
-                      {item.count}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </SheetContent>
+    </Sheet>
   );
 }
