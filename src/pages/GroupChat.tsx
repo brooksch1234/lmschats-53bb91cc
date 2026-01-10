@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Image, Mic, Square, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 interface GroupMessage {
@@ -18,6 +19,7 @@ interface GroupMessage {
   created_at: string;
   sender?: {
     username: string;
+    isAdmin?: boolean;
   };
 }
 
@@ -120,7 +122,15 @@ export default function GroupChat() {
       .select('id, username')
       .in('id', senderIds);
 
-    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+    // Get admin roles for senders
+    const { data: adminRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin')
+      .in('user_id', senderIds);
+
+    const adminSet = new Set(adminRoles?.map(r => r.user_id) || []);
+    const profileMap = new Map(profiles?.map(p => [p.id, { ...p, isAdmin: adminSet.has(p.id) }]) || []);
 
     const messagesWithSenders = (messagesData || []).map(msg => ({
       ...msg,
@@ -410,9 +420,14 @@ export default function GroupChat() {
                       }`}
                     >
                       {!isOwn && (
-                        <p className={`text-xs font-medium mb-1 ${isOwn ? 'text-primary-foreground/80' : 'text-primary'}`}>
-                          {message.sender?.username || 'Unknown'}
-                        </p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className={`text-xs font-medium ${isOwn ? 'text-primary-foreground/80' : 'text-primary'}`}>
+                            {message.sender?.username || 'Unknown'}
+                          </p>
+                          {message.sender?.isAdmin && (
+                            <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0">Admin</Badge>
+                          )}
+                        </div>
                       )}
                       {message.message_type === 'text' && (
                         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>

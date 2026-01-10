@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Image, Mic, Square } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 interface Message {
@@ -21,6 +22,7 @@ interface Message {
 interface OtherUser {
   id: string;
   username: string;
+  isAdmin?: boolean;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -75,7 +77,11 @@ export default function Chat() {
 
     const otherUserId = connection.user1_id === user.id ? connection.user2_id : connection.user1_id;
     const { data: profileData } = await supabase.from('profiles').select('id, username').eq('id', otherUserId).maybeSingle();
-    setOtherUser(profileData);
+    
+    // Check if other user is admin
+    const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', otherUserId).eq('role', 'admin').maybeSingle();
+    
+    setOtherUser(profileData ? { ...profileData, isAdmin: !!roleData } : null);
 
     const { data: messagesData } = await supabase.from('messages').select('*').eq('connection_id', connectionId).order('created_at', { ascending: true });
     setMessages(messagesData || []);
@@ -164,7 +170,12 @@ export default function Chat() {
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="font-semibold text-primary">{otherUser?.username?.charAt(0).toUpperCase() || '?'}</span>
             </div>
-            <h1 className="font-semibold text-foreground">{otherUser?.username || 'Loading...'}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-semibold text-foreground">{otherUser?.username || 'Loading...'}</h1>
+              {otherUser?.isAdmin && (
+                <Badge variant="secondary" className="bg-primary/20 text-primary text-xs">Admin</Badge>
+              )}
+            </div>
           </div>
         </div>
       </header>
