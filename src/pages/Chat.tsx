@@ -111,7 +111,7 @@ export default function Chat() {
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
       await supabase.storage.from('chat-media').upload(fileName, file);
       const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(fileName);
-      await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, message_type: 'image', media_url: urlData.publicUrl });
+      await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'image', media_url: urlData.publicUrl });
     } catch { toast({ title: "Upload failed", variant: "destructive" }); }
     finally { setSending(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
@@ -146,7 +146,7 @@ export default function Chat() {
       const fileName = `${user.id}/${Date.now()}-voice.webm`;
       await supabase.storage.from('chat-media').upload(fileName, audioBlob);
       const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(fileName);
-      await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, message_type: 'voice', media_url: urlData.publicUrl });
+      await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'voice', media_url: urlData.publicUrl });
     } catch { toast({ title: "Upload failed", variant: "destructive" }); }
     finally { setSending(false); audioChunksRef.current = []; }
   };
