@@ -86,6 +86,31 @@ export default function Chat() {
     const { data: messagesData } = await supabase.from('messages').select('*').eq('connection_id', connectionId).order('created_at', { ascending: true });
     setMessages(messagesData || []);
     setLoading(false);
+
+    // Mark messages as read
+    await markAsRead();
+  };
+
+  const markAsRead = async () => {
+    if (!user || !connectionId) return;
+    
+    const { data: existing } = await supabase
+      .from('message_reads')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('connection_id', connectionId)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('message_reads')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('message_reads')
+        .insert({ user_id: user.id, connection_id: connectionId });
+    }
   };
 
   const setupRealtimeSubscription = () => {

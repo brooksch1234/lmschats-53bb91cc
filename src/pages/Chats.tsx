@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { FriendRequests } from '@/components/FriendRequests';
 import { CreateGroupDialog } from '@/components/CreateGroupDialog';
+import { NotificationBell } from '@/components/NotificationBell';
 import { 
   MessageCircle, 
   Plus, 
@@ -468,6 +469,7 @@ export default function Chats() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <FriendRequests />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>

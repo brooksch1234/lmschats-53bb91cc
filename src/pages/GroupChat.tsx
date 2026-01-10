@@ -139,6 +139,31 @@ export default function GroupChat() {
 
     setMessages(messagesWithSenders);
     setLoading(false);
+
+    // Mark messages as read
+    await markAsRead();
+  };
+
+  const markAsRead = async () => {
+    if (!user || !groupId) return;
+    
+    const { data: existing } = await supabase
+      .from('message_reads')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('group_id', groupId)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('message_reads')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('message_reads')
+        .insert({ user_id: user.id, group_id: groupId });
+    }
   };
 
   const setupRealtimeSubscription = () => {
