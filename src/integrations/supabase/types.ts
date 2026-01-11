@@ -145,6 +145,7 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
+          is_pinned: boolean
           media_url: string | null
           message_type: string
           sender_id: string
@@ -154,6 +155,7 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
+          is_pinned?: boolean
           media_url?: string | null
           message_type?: string
           sender_id: string
@@ -163,6 +165,7 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
+          is_pinned?: boolean
           media_url?: string | null
           message_type?: string
           sender_id?: string

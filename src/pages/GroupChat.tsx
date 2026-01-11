@@ -5,9 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Send, Image, Mic, Square, Users } from 'lucide-react';
+import { ArrowLeft, Send, Image, Mic, Square, Users, Pin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { TypingIndicator } from '@/components/TypingIndicator';
+import { EditGroupNameDialog } from '@/components/EditGroupNameDialog';
+import { PinnedMessages } from '@/components/PinnedMessages';
 
 interface GroupMessage {
   id: string;
@@ -17,6 +21,7 @@ interface GroupMessage {
   message_type: string;
   media_url: string | null;
   created_at: string;
+  is_pinned?: boolean;
   sender?: {
     username: string;
     isAdmin?: boolean;
@@ -30,8 +35,8 @@ interface GroupInfo {
   member_count?: number;
 }
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_VOICE_DURATION = 60; // 60 seconds
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_VOICE_DURATION = 60;
 
 export default function GroupChat() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -45,17 +50,37 @@ export default function GroupChat() {
   const [loading, setLoading] = useState(true);
   const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [myUsername, setMyUsername] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const { typingUsers, handleInputChange, stopTyping } = useTypingIndicator(
+    groupId ? `group:${groupId}` : '',
+    myUsername
+  );
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .maybeSingle();
+        setMyUsername(data?.username || 'User');
+      }
+    };
+    fetchUsername();
+  }, [user]);
 
   useEffect(() => {
     if (user && groupId) {
@@ -77,7 +102,6 @@ export default function GroupChat() {
     if (!user || !groupId) return;
     setLoading(true);
 
-    // Fetch group info
     const { data: group, error: groupError } = await supabase
       .from('group_chats')
       .select('*')
@@ -94,7 +118,6 @@ export default function GroupChat() {
       return;
     }
 
-    // Get member count
     const { count } = await supabase
       .from('group_members')
       .select('*', { count: 'exact', head: true })
@@ -102,7 +125,6 @@ export default function GroupChat() {
 
     setGroupInfo({ ...group, member_count: count || 0 });
 
-    // Fetch messages
     const { data: messagesData, error: msgError } = await supabase
       .from('group_messages')
       .select('*')
@@ -115,14 +137,12 @@ export default function GroupChat() {
       return;
     }
 
-    // Get sender profiles
     const senderIds = [...new Set(messagesData?.map(m => m.sender_id) || [])];
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, username')
       .in('id', senderIds);
 
-    // Get admin roles for senders
     const { data: adminRoles } = await supabase
       .from('user_roles')
       .select('user_id')
@@ -139,8 +159,6 @@ export default function GroupChat() {
 
     setMessages(messagesWithSenders);
     setLoading(false);
-
-    // Mark messages as read
     await markAsRead();
   };
 
@@ -180,7 +198,6 @@ export default function GroupChat() {
         async (payload) => {
           const newMsg = payload.new as GroupMessage;
           
-          // Fetch sender profile
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, username')
@@ -193,6 +210,21 @@ export default function GroupChat() {
           });
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'group_messages',
+          filter: `group_id=eq.${groupId}`,
+        },
+        (payload) => {
+          const updatedMsg = payload.new as GroupMessage;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updatedMsg.id ? { ...m, is_pinned: updatedMsg.is_pinned } : m))
+          );
+        }
+      )
       .subscribe();
 
     return () => {
@@ -203,6 +235,7 @@ export default function GroupChat() {
   const handleSend = async () => {
     if (!user || !groupId || !newMessage.trim()) return;
     setSending(true);
+    stopTyping();
 
     const { error } = await supabase.from('group_messages').insert({
       group_id: groupId,
@@ -370,11 +403,34 @@ export default function GroupChat() {
     }
   };
 
+  const handleMessageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    handleInputChange();
+  };
+
+  const togglePin = async (messageId: string, currentlyPinned: boolean) => {
+    const { error } = await supabase
+      .from('group_messages')
+      .update({ is_pinned: !currentlyPinned })
+      .eq('id', messageId);
+
+    if (error) {
+      toast({
+        title: 'Failed to update pin',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const pinnedMessages = messages.filter((m) => m.is_pinned);
+  const isCreator = groupInfo?.creator_id === user?.id;
 
   if (authLoading || !user) {
     return (
@@ -392,12 +448,22 @@ export default function GroupChat() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/chats')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Users className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h1 className="font-semibold text-foreground">{groupInfo?.name || 'Loading...'}</h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="font-semibold text-foreground">{groupInfo?.name || 'Loading...'}</h1>
+                {groupInfo && (
+                  <EditGroupNameDialog
+                    groupId={groupInfo.id}
+                    currentName={groupInfo.name}
+                    isCreator={isCreator}
+                    onNameUpdated={(newName) => setGroupInfo({ ...groupInfo, name: newName })}
+                  />
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {groupInfo?.member_count || 0} members
               </p>
@@ -405,6 +471,12 @@ export default function GroupChat() {
           </div>
         </div>
       </header>
+
+      {/* Pinned Messages */}
+      <PinnedMessages
+        messages={pinnedMessages}
+        onUnpin={(id) => togglePin(id, true)}
+      />
 
       {/* Messages */}
       <main className="flex-1 overflow-y-auto">
@@ -436,14 +508,26 @@ export default function GroupChat() {
                       </span>
                     </div>
                   )}
-                  <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-scale-in`}>
+                  <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-scale-in group`}>
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 relative ${
                         isOwn
                           ? 'bg-primary text-primary-foreground rounded-br-md'
                           : 'glass-card rounded-bl-md'
-                      }`}
+                      } ${message.is_pinned ? 'ring-2 ring-primary/30' : ''}`}
                     >
+                      {/* Pin button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-background shadow-md ${
+                          message.is_pinned ? 'text-primary' : ''
+                        }`}
+                        onClick={() => togglePin(message.id, !!message.is_pinned)}
+                      >
+                        <Pin className="w-3 h-3" />
+                      </Button>
+
                       {!isOwn && (
                         <div className="flex items-center gap-2 mb-1">
                           <p className={`text-xs font-medium ${isOwn ? 'text-primary-foreground/80' : 'text-primary'}`}>
@@ -482,6 +566,13 @@ export default function GroupChat() {
           <div ref={messagesEndRef} />
         </div>
       </main>
+
+      {/* Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="max-w-2xl mx-auto w-full">
+          <TypingIndicator typingUsers={typingUsers} />
+        </div>
+      )}
 
       {/* Message Input */}
       <footer className="glass-card border-t border-border/50 sticky bottom-0">
@@ -533,7 +624,7 @@ export default function GroupChat() {
               <Input
                 placeholder="Type a message..."
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={handleMessageInputChange}
                 onKeyPress={handleKeyPress}
                 className="flex-1 h-12 bg-secondary/50 border-border/50"
                 disabled={sending}

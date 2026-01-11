@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Image, Mic, Square } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { TypingIndicator } from '@/components/TypingIndicator';
 
 interface Message {
   id: string;
@@ -40,15 +42,35 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [myUsername, setMyUsername] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const { typingUsers, handleInputChange, stopTyping } = useTypingIndicator(
+    connectionId ? `dm:${connectionId}` : '',
+    myUsername
+  );
+
   useEffect(() => {
     if (!authLoading && !user) navigate('/auth');
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .maybeSingle();
+        setMyUsername(data?.username || 'User');
+      }
+    };
+    fetchUsername();
+  }, [user]);
 
   useEffect(() => {
     if (user && connectionId) {
@@ -78,7 +100,6 @@ export default function Chat() {
     const otherUserId = connection.user1_id === user.id ? connection.user2_id : connection.user1_id;
     const { data: profileData } = await supabase.from('profiles').select('id, username').eq('id', otherUserId).maybeSingle();
     
-    // Check if other user is admin
     const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', otherUserId).eq('role', 'admin').maybeSingle();
     
     setOtherUser(profileData ? { ...profileData, isAdmin: !!roleData } : null);
@@ -87,7 +108,6 @@ export default function Chat() {
     setMessages(messagesData || []);
     setLoading(false);
 
-    // Mark messages as read
     await markAsRead();
   };
 
@@ -127,6 +147,7 @@ export default function Chat() {
   const handleSend = async () => {
     if (!user || !connectionId || !newMessage.trim()) return;
     setSending(true);
+    stopTyping();
     const { error } = await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: newMessage.trim(), message_type: 'text' });
     if (error) toast({ title: "Failed to send", description: error.message, variant: "destructive" });
     else setNewMessage('');
@@ -182,6 +203,11 @@ export default function Chat() {
     finally { setSending(false); audioChunksRef.current = []; }
   };
 
+  const handleMessageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    handleInputChange();
+  };
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   if (authLoading || !user) return <div className="min-h-screen gradient-bg flex items-center justify-center"><div className="animate-pulse text-muted-foreground">Loading...</div></div>;
@@ -228,6 +254,13 @@ export default function Chat() {
         </div>
       </main>
 
+      {/* Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="max-w-2xl mx-auto w-full">
+          <TypingIndicator typingUsers={typingUsers} />
+        </div>
+      )}
+
       <footer className="glass-card border-t border-border/50 sticky bottom-0">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -244,7 +277,14 @@ export default function Chat() {
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}><Image className="w-5 h-5" /></Button>
               <Button variant="ghost" size="icon" onClick={startRecording} disabled={sending}><Mic className="w-5 h-5" /></Button>
-              <Input placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} className="flex-1 h-12 bg-secondary/50 border-border/50" disabled={sending} />
+              <Input 
+                placeholder="Type a message..." 
+                value={newMessage} 
+                onChange={handleMessageInputChange} 
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} 
+                className="flex-1 h-12 bg-secondary/50 border-border/50" 
+                disabled={sending} 
+              />
               <Button variant="hero" size="icon" className="h-12 w-12" onClick={handleSend} disabled={sending || !newMessage.trim()}><Send className="w-5 h-5" /></Button>
             </div>
           )}
