@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { CreateGroupDialog } from '@/components/CreateGroupDialog';
 import { NotificationBell } from '@/components/NotificationBell';
+import { BetaTagPopup } from '@/components/BetaTagPopup';
 import { 
   MessageCircle, 
   Plus, 
@@ -482,6 +483,7 @@ export default function Chats() {
       </header>
 
       <AnnouncementBanner />
+      <BetaTagPopup />
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Connection Code Card */}

@@ -20,6 +20,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { AdminTagManager } from '@/components/AdminTagManager';
 
 interface Stats {
   totalUsers: number;
@@ -258,6 +259,9 @@ export default function Admin() {
             </Button>
           </div>
         </div>
+
+        {/* Tag Manager */}
+        <AdminTagManager />
 
         {/* Announcements List */}
         <div className="space-y-3">

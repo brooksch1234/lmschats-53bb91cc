@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Send, Image, Mic, Square, Users, Pin } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { TypingIndicator } from '@/components/TypingIndicator';
 import { EditGroupNameDialog } from '@/components/EditGroupNameDialog';
 import { PinnedMessages } from '@/components/PinnedMessages';
+import { UserTags } from '@/components/UserTags';
+import { useMultipleUserTags } from '@/hooks/useUserTags';
 
 interface GroupMessage {
   id: string;
@@ -24,7 +25,6 @@ interface GroupMessage {
   is_pinned?: boolean;
   sender?: {
     username: string;
-    isAdmin?: boolean;
   };
 }
 
@@ -143,14 +143,7 @@ export default function GroupChat() {
       .select('id, username')
       .in('id', senderIds);
 
-    const { data: adminRoles } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin')
-      .in('user_id', senderIds);
-
-    const adminSet = new Set(adminRoles?.map(r => r.user_id) || []);
-    const profileMap = new Map(profiles?.map(p => [p.id, { ...p, isAdmin: adminSet.has(p.id) }]) || []);
+    const profileMap = new Map(profiles?.map(p => [p.id, { username: p.username }]) || []);
 
     const messagesWithSenders = (messagesData || []).map(msg => ({
       ...msg,
@@ -431,6 +424,9 @@ export default function GroupChat() {
 
   const pinnedMessages = messages.filter((m) => m.is_pinned);
   const isCreator = groupInfo?.creator_id === user?.id;
+  
+  const senderIds = useMemo(() => [...new Set(messages.map(m => m.sender_id))], [messages]);
+  const { tagsMap } = useMultipleUserTags(senderIds);
 
   if (authLoading || !user) {
     return (
@@ -533,9 +529,7 @@ export default function GroupChat() {
                           <p className={`text-xs font-medium ${isOwn ? 'text-primary-foreground/80' : 'text-primary'}`}>
                             {message.sender?.username || 'Unknown'}
                           </p>
-                          {message.sender?.isAdmin && (
-                            <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0">Admin</Badge>
-                          )}
+                          <UserTags tags={tagsMap[message.sender_id] || []} />
                         </div>
                       )}
                       {message.message_type === 'text' && (
