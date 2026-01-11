@@ -284,6 +284,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_system: boolean
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           created_at: string
@@ -328,6 +352,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_tags: {
+        Row: {
+          created_at: string
+          custom_color: string | null
+          equipped: boolean
+          id: string
+          tag_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_color?: string | null
+          equipped?: boolean
+          id?: string
+          tag_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_color?: string | null
+          equipped?: boolean
+          id?: string
+          tag_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
