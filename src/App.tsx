@@ -10,6 +10,8 @@ import Chats from "./pages/Chats";
 import Chat from "./pages/Chat";
 import GroupChat from "./pages/GroupChat";
 import Admin from "./pages/Admin";
+import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/chat/:connectionId" element={<Chat />} />
             <Route path="/group/:groupId" element={<GroupChat />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/shop/product/:handle" element={<ProductDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
