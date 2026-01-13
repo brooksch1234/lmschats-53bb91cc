@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { usePremium } from '@/hooks/usePremium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users } from 'lucide-react';
+import { Users, Crown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { PremiumPopup } from './PremiumPopup';
 
 interface Connection {
   id: string;
@@ -27,7 +29,9 @@ interface CreateGroupDialogProps {
 export function CreateGroupDialog({ onGroupCreated }: CreateGroupDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isPremium } = usePremium();
   const [open, setOpen] = useState(false);
+  const [premiumPopupOpen, setPremiumPopupOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
@@ -142,14 +146,29 @@ export function CreateGroupDialog({ onGroupCreated }: CreateGroupDialogProps) {
     }
   };
 
+  const handleOpenDialog = () => {
+    if (!isPremium) {
+      setPremiumPopupOpen(true);
+      return;
+    }
+    setOpen(true);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full" size="lg">
-          <Users className="w-5 h-5 mr-2" />
-          Create Group Chat
-        </Button>
-      </DialogTrigger>
+    <>
+      <Button variant="outline" className="w-full relative" size="lg" onClick={handleOpenDialog}>
+        <Users className="w-5 h-5 mr-2" />
+        Create Group Chat
+        {!isPremium && <Crown className="w-4 h-4 ml-2 text-yellow-500" />}
+      </Button>
+      
+      <PremiumPopup 
+        open={premiumPopupOpen} 
+        onOpenChange={setPremiumPopupOpen}
+        featureName="Create Group Chats"
+      />
+      
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="glass-card border-border/50 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create Group Chat</DialogTitle>
@@ -209,5 +228,6 @@ export function CreateGroupDialog({ onGroupCreated }: CreateGroupDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

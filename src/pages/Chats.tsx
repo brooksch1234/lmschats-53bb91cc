@@ -11,6 +11,7 @@ import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { CreateGroupDialog } from '@/components/CreateGroupDialog';
 import { NotificationBell } from '@/components/NotificationBell';
 import { BetaTagPopup } from '@/components/BetaTagPopup';
+import { ThemeSelector } from '@/components/ThemeSelector';
 import { 
   MessageCircle, 
   Plus, 
@@ -469,6 +470,7 @@ export default function Chats() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeSelector />
             <NotificationBell />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
