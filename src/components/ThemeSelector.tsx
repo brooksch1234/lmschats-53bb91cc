@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Palette, Crown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +19,8 @@ interface Theme {
     primary: string;
     background: string;
     accent: string;
+    foreground: string;
+    card: string;
   };
 }
 
@@ -28,9 +30,11 @@ const themes: Theme[] = [
     name: 'Ocean Blue',
     isPremium: false,
     colors: {
-      primary: 'hsl(205, 85%, 55%)',
-      background: 'hsl(215, 35%, 18%)',
-      accent: 'hsl(205, 60%, 25%)',
+      primary: '205 85% 55%',
+      background: '215 35% 18%',
+      accent: '205 60% 25%',
+      foreground: '210 20% 95%',
+      card: '215 32% 22%',
     },
   },
   {
@@ -38,9 +42,11 @@ const themes: Theme[] = [
     name: 'Royal Purple',
     isPremium: true,
     colors: {
-      primary: 'hsl(270, 70%, 60%)',
-      background: 'hsl(270, 30%, 15%)',
-      accent: 'hsl(270, 50%, 25%)',
+      primary: '270 70% 60%',
+      background: '270 30% 15%',
+      accent: '270 50% 25%',
+      foreground: '270 20% 95%',
+      card: '270 28% 20%',
     },
   },
   {
@@ -48,9 +54,11 @@ const themes: Theme[] = [
     name: 'Emerald Forest',
     isPremium: true,
     colors: {
-      primary: 'hsl(160, 70%, 45%)',
-      background: 'hsl(160, 25%, 12%)',
-      accent: 'hsl(160, 45%, 20%)',
+      primary: '160 70% 45%',
+      background: '160 25% 12%',
+      accent: '160 45% 20%',
+      foreground: '160 20% 95%',
+      card: '160 22% 18%',
     },
   },
   {
@@ -58,9 +66,11 @@ const themes: Theme[] = [
     name: 'Rose Gold',
     isPremium: true,
     colors: {
-      primary: 'hsl(340, 65%, 55%)',
-      background: 'hsl(340, 20%, 15%)',
-      accent: 'hsl(340, 40%, 22%)',
+      primary: '340 65% 55%',
+      background: '340 20% 15%',
+      accent: '340 40% 22%',
+      foreground: '340 20% 95%',
+      card: '340 18% 20%',
     },
   },
   {
@@ -68,18 +78,51 @@ const themes: Theme[] = [
     name: 'Sunset Orange',
     isPremium: true,
     colors: {
-      primary: 'hsl(25, 85%, 55%)',
-      background: 'hsl(25, 25%, 12%)',
-      accent: 'hsl(25, 50%, 20%)',
+      primary: '25 85% 55%',
+      background: '25 25% 12%',
+      accent: '25 50% 20%',
+      foreground: '25 20% 95%',
+      card: '25 22% 18%',
     },
   },
 ];
+
+const THEME_STORAGE_KEY = 'lms-chats-theme';
+
+const applyTheme = (theme: Theme) => {
+  const root = document.documentElement;
+  root.style.setProperty('--primary', theme.colors.primary);
+  root.style.setProperty('--background', theme.colors.background);
+  root.style.setProperty('--accent', theme.colors.accent);
+  root.style.setProperty('--foreground', theme.colors.foreground);
+  root.style.setProperty('--card', theme.colors.card);
+  root.style.setProperty('--popover', theme.colors.card);
+  root.style.setProperty('--secondary', theme.colors.accent);
+  root.style.setProperty('--muted', theme.colors.accent);
+  root.style.setProperty('--ring', theme.colors.primary);
+  localStorage.setItem(THEME_STORAGE_KEY, theme.id);
+};
 
 export function ThemeSelector() {
   const { isPremium } = usePremium();
   const [open, setOpen] = useState(false);
   const [premiumPopupOpen, setPremiumPopupOpen] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('default');
+
+  // Load saved theme on mount
+  useEffect(() => {
+    const savedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedThemeId) {
+      const theme = themes.find(t => t.id === savedThemeId);
+      if (theme) {
+        // Only apply if user has access
+        if (!theme.isPremium || isPremium) {
+          setSelectedTheme(theme.id);
+          applyTheme(theme);
+        }
+      }
+    }
+  }, [isPremium]);
 
   const handleThemeSelect = (theme: Theme) => {
     if (theme.isPremium && !isPremium) {
@@ -88,7 +131,8 @@ export function ThemeSelector() {
     }
     
     setSelectedTheme(theme.id);
-    // TODO: Actually apply the theme by updating CSS variables
+    applyTheme(theme);
+    setOpen(false);
   };
 
   return (
@@ -133,15 +177,15 @@ export function ThemeSelector() {
                 <div className="flex gap-1 mb-3">
                   <div 
                     className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: theme.colors.primary }}
+                    style={{ backgroundColor: `hsl(${theme.colors.primary})` }}
                   />
                   <div 
                     className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: theme.colors.background }}
+                    style={{ backgroundColor: `hsl(${theme.colors.background})` }}
                   />
                   <div 
                     className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: theme.colors.accent }}
+                    style={{ backgroundColor: `hsl(${theme.colors.accent})` }}
                   />
                 </div>
                 

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { AdminTagManager } from '@/components/AdminTagManager';
+import { AdminPremiumManager } from '@/components/AdminPremiumManager';
 
 interface Stats {
   totalUsers: number;
@@ -259,6 +260,9 @@ export default function Admin() {
             </Button>
           </div>
         </div>
+
+        {/* Premium Manager */}
+        <AdminPremiumManager />
 
         {/* Tag Manager */}
         <AdminTagManager />

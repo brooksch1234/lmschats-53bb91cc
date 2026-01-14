@@ -70,20 +70,13 @@ export function PremiumPopup({ open, onOpenChange, featureName }: PremiumPopupPr
               className="flex-1"
               onClick={() => onOpenChange(false)}
             >
-              Maybe Later
-            </Button>
-            <Button
-              variant="hero"
-              className="flex-1"
-              onClick={() => {
-                // TODO: Implement premium upgrade flow
-                onOpenChange(false);
-              }}
-            >
-              <Crown className="w-4 h-4 mr-2" />
-              Get Premium
+              Close
             </Button>
           </div>
+
+          <p className="text-xs text-center text-muted-foreground">
+            Contact an admin to get premium access
+          </p>
         </div>
       </DialogContent>
     </Dialog>

@@ -12,6 +12,7 @@ import { CreateGroupDialog } from '@/components/CreateGroupDialog';
 import { NotificationBell } from '@/components/NotificationBell';
 import { BetaTagPopup } from '@/components/BetaTagPopup';
 import { ThemeSelector } from '@/components/ThemeSelector';
+import { TagSelector } from '@/components/TagSelector';
 import { 
   MessageCircle, 
   Plus, 
@@ -470,6 +471,7 @@ export default function Chats() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <TagSelector />
             <ThemeSelector />
             <NotificationBell />
             {isAdmin && (
