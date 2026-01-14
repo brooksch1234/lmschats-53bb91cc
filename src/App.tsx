@@ -7,9 +7,10 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { PremiumProvider } from "@/hooks/usePremium";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Chats from "./pages/Chats";
-import Chat from "./pages/Chat";
-import GroupChat from "./pages/GroupChat";
+import ChatLayout from "./components/ChatLayout";
+import ChatWelcome from "./components/ChatWelcome";
+import ChatView from "./components/ChatView";
+import GroupChatView from "./components/GroupChatView";
 import Admin from "./pages/Admin";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -28,9 +29,17 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/chats" element={<Chats />} />
-              <Route path="/chat/:connectionId" element={<Chat />} />
-              <Route path="/group/:groupId" element={<GroupChat />} />
+              <Route path="/chats" element={<ChatLayout />}>
+                <Route index element={<ChatWelcome />} />
+                <Route path="chat/:connectionId" element={<ChatView />} />
+                <Route path="group/:groupId" element={<GroupChatView />} />
+              </Route>
+              <Route path="/chat/:connectionId" element={<ChatLayout />}>
+                <Route index element={<ChatView />} />
+              </Route>
+              <Route path="/group/:groupId" element={<ChatLayout />}>
+                <Route index element={<GroupChatView />} />
+              </Route>
               <Route path="/admin" element={<Admin />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/shop/product/:handle" element={<ProductDetail />} />
