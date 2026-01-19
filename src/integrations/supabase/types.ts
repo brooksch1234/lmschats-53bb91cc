@@ -180,6 +180,30 @@ export type Database = {
           },
         ]
       }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_reads: {
         Row: {
           connection_id: string | null
@@ -262,23 +286,32 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           connection_code: string
           created_at: string
           id: string
+          last_seen_at: string | null
           updated_at: string
           username: string
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           connection_code?: string
           created_at?: string
           id: string
+          last_seen_at?: string | null
           updated_at?: string
           username: string
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           connection_code?: string
           created_at?: string
           id?: string
+          last_seen_at?: string | null
           updated_at?: string
           username?: string
         }

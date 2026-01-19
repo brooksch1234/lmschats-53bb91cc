@@ -12,6 +12,10 @@ import { TypingIndicator } from '@/components/TypingIndicator';
 import { UserTags } from '@/components/UserTags';
 import { useUserTags } from '@/hooks/useUserTags';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageReactions } from '@/components/MessageReactions';
+import { OnlineIndicator } from '@/components/OnlineIndicator';
+import { UserProfileCard } from '@/components/UserProfileCard';
+import { ChatSearch } from '@/components/ChatSearch';
 
 interface Message {
   id: string;
@@ -44,6 +48,7 @@ export default function ChatView() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [myUsername, setMyUsername] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -55,6 +60,20 @@ export default function ChatView() {
   );
 
   const { tags: otherUserTags } = useUserTags(otherUser?.id);
+
+  const scrollToMessage = (messageId: string) => {
+    const el = messageRefs.current[messageId];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('bg-primary/10');
+      setTimeout(() => el.classList.remove('bg-primary/10'), 2000);
+    }
+  };
+
+  const senderNames: Record<string, string> = {
+    ...(user ? { [user.id]: myUsername } : {}),
+    ...(otherUser ? { [otherUser.id]: otherUser.username } : {}),
+  };
 
   useEffect(() => {
     const fetchUsername = async () => {
@@ -194,16 +213,34 @@ export default function ChatView() {
     <div className="flex flex-col h-full">
       {/* Chat Header */}
       <div className="glass-card border-b border-border/50 px-4 py-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="font-semibold text-primary">{otherUser?.username?.charAt(0).toUpperCase() || '?'}</span>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-foreground">{otherUser?.username || 'Loading...'}</h1>
-              <UserTags tags={otherUserTags} />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {otherUser && (
+              <UserProfileCard
+                userId={otherUser.id}
+                trigger={
+                  <button className="relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:ring-2 hover:ring-primary/50 transition-all">
+                    <span className="font-semibold text-primary">{otherUser.username.charAt(0).toUpperCase()}</span>
+                    <div className="absolute -bottom-0.5 -right-0.5">
+                      <OnlineIndicator userId={otherUser.id} />
+                    </div>
+                  </button>
+                }
+              />
+            )}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h1 className="font-semibold text-foreground">{otherUser?.username || 'Loading...'}</h1>
+                <UserTags tags={otherUserTags} />
+              </div>
+              {otherUser && <OnlineIndicator userId={otherUser.id} showText />}
             </div>
           </div>
+          <ChatSearch 
+            messages={messages.filter(m => m.message_type === 'text')} 
+            onResultClick={scrollToMessage}
+            senderNames={senderNames}
+          />
         </div>
       </div>
 
@@ -227,12 +264,16 @@ export default function ChatView() {
                       </span>
                     </div>
                   )}
-                  <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                  <div 
+                    ref={(el) => { messageRefs.current[message.id] = el; }}
+                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group transition-colors rounded-lg`}
+                  >
                     <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
                       {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
                       {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
                       {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
                       <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
+                      <MessageReactions messageId={message.id} isOwn={isOwn} />
                     </div>
                   </div>
                 </div>
