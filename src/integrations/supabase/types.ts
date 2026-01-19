@@ -86,6 +86,33 @@ export type Database = {
         }
         Relationships: []
       }
+      game_scores: {
+        Row: {
+          created_at: string
+          game_type: string
+          id: string
+          metadata: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          game_type: string
+          id?: string
+          metadata?: Json | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          game_type?: string
+          id?: string
+          metadata?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       group_chats: {
         Row: {
           created_at: string
@@ -284,6 +311,79 @@ export type Database = {
           },
         ]
       }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          anonymous: boolean | null
+          created_at: string
+          creator_id: string
+          ends_at: string | null
+          group_id: string | null
+          id: string
+          options: Json
+          question: string
+        }
+        Insert: {
+          anonymous?: boolean | null
+          created_at?: string
+          creator_id: string
+          ends_at?: string | null
+          group_id?: string | null
+          id?: string
+          options?: Json
+          question: string
+        }
+        Update: {
+          anonymous?: boolean | null
+          created_at?: string
+          creator_id?: string
+          ends_at?: string | null
+          group_id?: string | null
+          id?: string
+          options?: Json
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polls_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -382,6 +482,33 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_status: {
+        Row: {
+          custom_status: string | null
+          id: string
+          mood: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          custom_status?: string | null
+          id?: string
+          mood?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          custom_status?: string | null
+          id?: string
+          mood?: string | null
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

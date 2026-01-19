@@ -14,6 +14,7 @@ import GroupChatView from "./components/GroupChatView";
 import Admin from "./pages/Admin";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
+import Games from "./pages/Games";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/shop/product/:handle" element={<ProductDetail />} />
+              <Route path="/games" element={<Games />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
