@@ -16,6 +16,7 @@ import { ThemeSelector } from '@/components/ThemeSelector';
 import { TagSelector } from '@/components/TagSelector';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
+import { MoodSelector } from '@/components/MoodSelector';
 import { 
   MessageCircle, 
   Plus, 
@@ -28,7 +29,8 @@ import {
   Wifi,
   Users,
   Menu,
-  X
+  X,
+  Gamepad2
 } from 'lucide-react';
 import {
   Dialog,
@@ -490,6 +492,10 @@ export default function ChatLayout() {
 
           {/* Right tools */}
           <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/games')} title="Games">
+              <Gamepad2 className="w-5 h-5" />
+            </Button>
+            <MoodSelector />
             <TagSelector />
             <ThemeSelector />
             <NotificationBell />

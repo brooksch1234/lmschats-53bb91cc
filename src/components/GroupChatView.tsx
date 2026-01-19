@@ -14,6 +14,9 @@ import { PinnedMessages } from '@/components/PinnedMessages';
 import { UserTags } from '@/components/UserTags';
 import { useMultipleUserTags } from '@/hooks/useUserTags';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageReactions } from '@/components/MessageReactions';
+import { CreatePollDialog } from '@/components/CreatePollDialog';
+import { PollCard } from '@/components/PollCard';
 
 interface GroupMessage {
   id: string;
@@ -211,32 +214,61 @@ export default function GroupChatView() {
   const senderIds = useMemo(() => [...new Set(messages.map(m => m.sender_id))], [messages]);
   const { tagsMap } = useMultipleUserTags(senderIds);
 
+  const [polls, setPolls] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (groupId) fetchPolls();
+  }, [groupId]);
+
+  const fetchPolls = async () => {
+    if (!groupId) return;
+    const { data } = await supabase
+      .from('polls')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    if (data) setPolls(data);
+  };
+
   if (!user) return null;
 
   return (
     <div className="flex flex-col h-full">
       {/* Group Header */}
       <div className="glass-card border-b border-border/50 px-4 py-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="font-semibold text-foreground">{groupInfo?.name || 'Loading...'}</h1>
-              {groupInfo && (
-                <EditGroupNameDialog
-                  groupId={groupInfo.id}
-                  currentName={groupInfo.name}
-                  isCreator={isCreator}
-                  onNameUpdated={(newName) => setGroupInfo({ ...groupInfo, name: newName })}
-                />
-              )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground">{groupInfo?.member_count || 0} members</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="font-semibold text-foreground">{groupInfo?.name || 'Loading...'}</h1>
+                {groupInfo && (
+                  <EditGroupNameDialog
+                    groupId={groupInfo.id}
+                    currentName={groupInfo.name}
+                    isCreator={isCreator}
+                    onNameUpdated={(newName) => setGroupInfo({ ...groupInfo, name: newName })}
+                  />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{groupInfo?.member_count || 0} members</p>
+            </div>
           </div>
+          {groupId && <CreatePollDialog groupId={groupId} onPollCreated={fetchPolls} />}
         </div>
       </div>
+
+      {/* Active Polls */}
+      {polls.length > 0 && (
+        <div className="px-4 py-2 border-b border-border/50 space-y-2">
+          {polls.slice(0, 2).map(poll => (
+            <PollCard key={poll.id} poll={poll} />
+          ))}
+        </div>
+      )}
 
       {/* Pinned Messages */}
       <PinnedMessages messages={pinnedMessages} onUnpin={(id) => togglePin(id, true)} />
