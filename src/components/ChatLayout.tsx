@@ -3,6 +3,7 @@ import { useNavigate, useParams, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import { BetaTagPopup } from '@/components/BetaTagPopup';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { TagSelector } from '@/components/TagSelector';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { 
   MessageCircle, 
   Plus, 
@@ -77,6 +79,7 @@ export default function ChatLayout() {
   const { user, signOut, loading: authLoading } = useAuth();
   const { isAdmin } = useAdmin();
   useNotifications();
+  useOnlineStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
   const params = useParams();
@@ -575,10 +578,15 @@ export default function ChatLayout() {
                           : 'hover:bg-accent/50'
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <div className="relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <span className="text-sm font-semibold text-primary">
                           {connection.other_user?.username?.charAt(0).toUpperCase() || '?'}
                         </span>
+                        {connection.other_user && (
+                          <div className="absolute -bottom-0.5 -right-0.5">
+                            <OnlineIndicator userId={connection.other_user.id} />
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 text-left min-w-0">
                         <h3 className="font-medium text-foreground text-sm truncate">
