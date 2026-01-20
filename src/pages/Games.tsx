@@ -11,6 +11,7 @@ import { SnakeGame } from '@/components/games/SnakeGame';
 import { TicTacToe } from '@/components/games/TicTacToe';
 import { WordleGame } from '@/components/games/WordleGame';
 import { FNAFGames } from '@/components/games/FNAFGames';
+import { UnblockedGames } from '@/components/games/UnblockedGames';
 
 interface LeaderboardEntry {
   username: string;
@@ -25,7 +26,11 @@ const GAMES = [
   { id: 'tictactoe', name: 'TicTac', component: TicTacToe },
   { id: 'wordle', name: 'Wordle', component: WordleGame },
   { id: 'fnaf', name: 'FNAF', component: FNAFGames },
+  { id: 'unblocked', name: 'More', component: UnblockedGames },
 ];
+
+// Games that have leaderboards (external launchers don't)
+const LEADERBOARD_GAMES = ['2048', 'flappy', 'snake', 'tictactoe', 'wordle'];
 
 export default function Games() {
   const [activeGame, setActiveGame] = useState('2048');
@@ -33,34 +38,51 @@ export default function Games() {
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
   useEffect(() => {
-    fetchLeaderboard(activeGame);
+    if (LEADERBOARD_GAMES.includes(activeGame)) {
+      fetchLeaderboard(activeGame);
+    } else {
+      setLeaderboard([]);
+    }
   }, [activeGame]);
 
   const fetchLeaderboard = async (gameType: string) => {
     setLoadingLeaderboard(true);
-    const { data } = await supabase
-      .from('game_scores')
-      .select('score, created_at, user_id')
-      .eq('game_type', gameType)
-      .order('score', { ascending: false })
-      .limit(10);
+    try {
+      // Get all user IDs from game scores first
+      const { data: scores } = await supabase
+        .from('game_scores')
+        .select('score, created_at, user_id')
+        .eq('game_type', gameType)
+        .order('score', { ascending: false })
+        .limit(10);
 
-    if (data) {
-      const withUsernames = await Promise.all(
-        data.map(async (entry) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', entry.user_id)
-            .maybeSingle();
-          return {
-            username: profile?.username || 'Unknown',
-            score: entry.score,
-            created_at: entry.created_at,
-          };
-        })
-      );
-      setLeaderboard(withUsernames);
+      if (scores && scores.length > 0) {
+        // Get unique user IDs
+        const userIds = [...new Set(scores.map(s => s.user_id))];
+        
+        // Fetch all profiles in one query
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', userIds);
+
+        // Create a map for quick lookup
+        const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
+
+        // Map scores with usernames
+        const withUsernames = scores.map((entry) => ({
+          username: profileMap.get(entry.user_id) || 'Unknown',
+          score: entry.score,
+          created_at: entry.created_at,
+        }));
+        
+        setLeaderboard(withUsernames);
+      } else {
+        setLeaderboard([]);
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      setLeaderboard([]);
     }
     setLoadingLeaderboard(false);
   };
@@ -90,7 +112,7 @@ export default function Games() {
           {/* Game Area */}
           <div className="lg:col-span-2">
             <Tabs value={activeGame} onValueChange={setActiveGame}>
-              <TabsList className="grid grid-cols-6 mb-6">
+              <TabsList className="grid grid-cols-7 mb-6">
                 {GAMES.map(game => (
                   <TabsTrigger key={game.id} value={game.id} className="text-xs px-2">
                     {game.name}
