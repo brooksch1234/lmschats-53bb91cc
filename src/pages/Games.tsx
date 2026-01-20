@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Game2048 } from '@/components/games/Game2048';
 import { FlappyBird } from '@/components/games/FlappyBird';
 import { SnakeGame } from '@/components/games/SnakeGame';
+import { TicTacToe } from '@/components/games/TicTacToe';
+import { WordleGame } from '@/components/games/WordleGame';
 
 interface LeaderboardEntry {
   username: string;
@@ -17,8 +19,10 @@ interface LeaderboardEntry {
 
 const GAMES = [
   { id: '2048', name: '2048', component: Game2048 },
-  { id: 'flappy', name: 'Flappy Bird', component: FlappyBird },
+  { id: 'flappy', name: 'Flappy', component: FlappyBird },
   { id: 'snake', name: 'Snake', component: SnakeGame },
+  { id: 'tictactoe', name: 'Tic-Tac-Toe', component: TicTacToe },
+  { id: 'wordle', name: 'Wordle', component: WordleGame },
 ];
 
 export default function Games() {
@@ -84,9 +88,9 @@ export default function Games() {
           {/* Game Area */}
           <div className="lg:col-span-2">
             <Tabs value={activeGame} onValueChange={setActiveGame}>
-              <TabsList className="grid grid-cols-3 mb-6">
+              <TabsList className="grid grid-cols-5 mb-6">
                 {GAMES.map(game => (
-                  <TabsTrigger key={game.id} value={game.id}>
+                  <TabsTrigger key={game.id} value={game.id} className="text-xs px-2">
                     {game.name}
                   </TabsTrigger>
                 ))}
