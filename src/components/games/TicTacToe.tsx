@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { RotateCcw, Users, Bot } from 'lucide-react';
-
+import { RotateCcw, Users, Bot, Wifi } from 'lucide-react';
+import { TicTacToeOnline } from './TicTacToeOnline';
 type Player = 'X' | 'O' | null;
 type Board = Player[];
 
@@ -56,6 +56,8 @@ const getAIMove = (board: Board): number => {
   return available[Math.floor(Math.random() * available.length)];
 };
 
+type GameMode = 'ai' | 'local' | 'online';
+
 export function TicTacToe() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -63,9 +65,8 @@ export function TicTacToe() {
   const [currentPlayer, setCurrentPlayer] = useState<'X' | 'O'>('X');
   const [winner, setWinner] = useState<Player>(null);
   const [isDraw, setIsDraw] = useState(false);
-  const [vsAI, setVsAI] = useState(true);
+  const [mode, setMode] = useState<GameMode>('ai');
   const [stats, setStats] = useState({ wins: 0, losses: 0, draws: 0 });
-
   useEffect(() => {
     const saved = localStorage.getItem('tictactoe-stats');
     if (saved) setStats(JSON.parse(saved));
@@ -86,7 +87,7 @@ export function TicTacToe() {
   };
 
   useEffect(() => {
-    if (vsAI && currentPlayer === 'O' && !winner && !isDraw) {
+    if (mode === 'ai' && currentPlayer === 'O' && !winner && !isDraw) {
       const timer = setTimeout(() => {
         const aiMove = getAIMove(board);
         if (aiMove !== undefined) {
@@ -95,8 +96,7 @@ export function TicTacToe() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentPlayer, vsAI, winner, isDraw, board]);
-
+  }, [currentPlayer, mode, winner, isDraw, board]);
   const makeMove = (index: number) => {
     if (board[index] || winner || isDraw) return;
 
@@ -128,10 +128,27 @@ export function TicTacToe() {
   };
 
   const handleClick = (index: number) => {
-    if (vsAI && currentPlayer === 'O') return;
+    if (mode === 'ai' && currentPlayer === 'O') return;
     makeMove(index);
   };
 
+  const setGameMode = (newMode: GameMode) => {
+    setMode(newMode);
+    restart();
+  };
+
+  // Show online mode
+  if (mode === 'online') {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <Button variant="ghost" size="sm" onClick={() => setGameMode('ai')} className="gap-2">
+          <Bot className="w-4 h-4" />
+          Back to Offline
+        </Button>
+        <TicTacToeOnline />
+      </div>
+    );
+  }
   const restart = () => {
     setBoard(Array(9).fill(null));
     setCurrentPlayer('X');
@@ -140,10 +157,9 @@ export function TicTacToe() {
   };
 
   const toggleMode = () => {
-    setVsAI(!vsAI);
+    setMode(mode === 'ai' ? 'local' : 'ai');
     restart();
   };
-
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex items-center justify-between w-full max-w-xs">
@@ -166,11 +182,16 @@ export function TicTacToe() {
         </Button>
       </div>
 
-      <Button variant="ghost" size="sm" onClick={toggleMode} className="gap-2">
-        {vsAI ? <Bot className="w-4 h-4" /> : <Users className="w-4 h-4" />}
-        {vsAI ? 'vs AI' : 'vs Friend'}
-      </Button>
-
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={toggleMode} className="gap-2">
+          {mode === 'ai' ? <Bot className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+          {mode === 'ai' ? 'vs AI' : 'vs Friend'}
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setGameMode('online')} className="gap-2">
+          <Wifi className="w-4 h-4" />
+          Online
+        </Button>
+      </div>
       <div className="bg-secondary/30 rounded-xl p-4">
         <div className="grid grid-cols-3 gap-2">
           {board.map((cell, i) => (
@@ -192,7 +213,7 @@ export function TicTacToe() {
 
       {!winner && !isDraw && (
         <p className="text-sm text-muted-foreground">
-          {vsAI && currentPlayer === 'O' 
+          {mode === 'ai' && currentPlayer === 'O' 
             ? "AI is thinking..." 
             : `${currentPlayer === 'X' ? 'Your' : "Player 2's"} turn (${currentPlayer})`
           }

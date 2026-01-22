@@ -390,6 +390,7 @@ export type Database = {
           bio: string | null
           connection_code: string
           created_at: string
+          display_name: string | null
           id: string
           last_seen_at: string | null
           updated_at: string
@@ -400,6 +401,7 @@ export type Database = {
           bio?: string | null
           connection_code?: string
           created_at?: string
+          display_name?: string | null
           id: string
           last_seen_at?: string | null
           updated_at?: string
@@ -410,6 +412,7 @@ export type Database = {
           bio?: string | null
           connection_code?: string
           created_at?: string
+          display_name?: string | null
           id?: string
           last_seen_at?: string | null
           updated_at?: string
@@ -438,6 +441,42 @@ export type Database = {
           id?: string
           is_system?: boolean
           name?: string
+        }
+        Relationships: []
+      }
+      tictactoe_games: {
+        Row: {
+          board: Json
+          created_at: string
+          current_turn: string
+          id: string
+          player_o_id: string | null
+          player_x_id: string
+          status: string
+          updated_at: string
+          winner: string | null
+        }
+        Insert: {
+          board?: Json
+          created_at?: string
+          current_turn?: string
+          id?: string
+          player_o_id?: string | null
+          player_x_id: string
+          status?: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Update: {
+          board?: Json
+          created_at?: string
+          current_turn?: string
+          id?: string
+          player_o_id?: string | null
+          player_x_id?: string
+          status?: string
+          updated_at?: string
+          winner?: string | null
         }
         Relationships: []
       }
