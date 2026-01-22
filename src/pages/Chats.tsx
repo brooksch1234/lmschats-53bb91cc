@@ -11,6 +11,7 @@ import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { CreateGroupDialog } from '@/components/CreateGroupDialog';
 import { NotificationBell } from '@/components/NotificationBell';
 import { BetaTagPopup } from '@/components/BetaTagPopup';
+import { ProfileSettings } from '@/components/ProfileSettings';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { TagSelector } from '@/components/TagSelector';
 import { 
@@ -471,6 +472,7 @@ export default function Chats() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ProfileSettings />
             <TagSelector />
             <ThemeSelector />
             <NotificationBell />
