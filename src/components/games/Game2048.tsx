@@ -41,10 +41,15 @@ const slideRow = (row: (number | null)[]): { row: (number | null)[]; score: numb
 };
 
 const move = (grid: Grid, direction: 'left' | 'right' | 'up' | 'down'): { grid: Grid; score: number; moved: boolean } => {
-  let rotations = { left: 0, up: 1, right: 2, down: 3 }[direction];
-  let rotated = grid;
-  for (let i = 0; i < rotations; i++) rotated = rotateGrid(rotated);
+  const rotations = { left: 0, up: 1, right: 2, down: 3 }[direction];
   
+  // Rotate grid so we can always slide left
+  let rotated = grid.map(row => [...row]);
+  for (let i = 0; i < rotations; i++) {
+    rotated = rotateGrid(rotated);
+  }
+  
+  // Slide each row left and accumulate score
   let totalScore = 0;
   const slid = rotated.map(row => {
     const { row: newRow, score } = slideRow(row);
@@ -52,9 +57,12 @@ const move = (grid: Grid, direction: 'left' | 'right' | 'up' | 'down'): { grid: 
     return newRow;
   });
   
-  for (let i = 0; i < (4 - rotations) % 4; i++) slid.forEach((_, i, arr) => arr[i] = rotateGrid(slid)[i] || arr[i]);
+  // Rotate back to original orientation
   let result = slid;
-  for (let i = 0; i < (4 - rotations) % 4; i++) result = rotateGrid(result);
+  const rotateBack = (4 - rotations) % 4;
+  for (let i = 0; i < rotateBack; i++) {
+    result = rotateGrid(result);
+  }
   
   const moved = JSON.stringify(grid) !== JSON.stringify(result);
   return { grid: result, score: totalScore, moved };

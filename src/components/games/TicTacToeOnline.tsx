@@ -114,15 +114,22 @@ export function TicTacToeOnline() {
   };
 
   const fetchWaitingGames = async () => {
-    const { data } = await supabase
+    if (!user) return;
+    
+    const { data, error } = await supabase
       .from('tictactoe_games' as any)
       .select('*')
       .eq('status', 'waiting')
-      .neq('player_x_id', user?.id || '')
+      .neq('player_x_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
     
-    setWaitingGames((data as unknown as Game[]) || []);
+    if (error) {
+      console.error('Error fetching games:', error);
+      setWaitingGames([]);
+    } else {
+      setWaitingGames((data as unknown as Game[]) || []);
+    }
   };
 
   const createGame = async () => {
