@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Trophy, Gamepad2, Medal } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Trophy, Gamepad2, Medal, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,6 +33,7 @@ const GAMES = [
 const LEADERBOARD_GAMES = ['2048', 'flappy', 'snake', 'tictactoe', 'wordle'];
 
 export default function Games() {
+  const navigate = useNavigate();
   const [activeGame, setActiveGame] = useState('2048');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -104,6 +105,16 @@ export default function Games() {
               <h1 className="text-xl font-bold">Games</h1>
             </div>
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/proxy')}
+            className="flex items-center gap-2"
+          >
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">Web Proxy</span>
+          </Button>
         </div>
       </header>
 
