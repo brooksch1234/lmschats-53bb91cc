@@ -2,6 +2,7 @@ import { Rocket, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const UNBLOCKED_GAMES = [
+  { id: 'roblox', name: 'Roblox', url: 'https://nowgg.fun/apps/a/19900/b.html', description: 'Play Roblox online', category: 'sandbox', useProxy: true },
   { id: 'slope', name: 'Slope', url: 'https://slope-online.github.io/', description: 'Fast-paced ball rolling', category: 'action' },
   { id: 'run3', name: 'Run 3', url: 'https://run3.io/', description: 'Endless runner in space', category: 'runner' },
   { id: 'ovo', name: 'OvO', url: 'https://ovo-game-online.github.io/', description: 'Parkour platformer', category: 'platformer' },
@@ -11,8 +12,12 @@ const UNBLOCKED_GAMES = [
 ];
 
 export function UnblockedGames() {
-  const launchGame = (url: string, gameName: string) => {
+  const launchGame = (url: string, gameName: string, useProxy?: boolean) => {
     const newTab = window.open('about:blank', '_blank');
+    
+    const finalUrl = useProxy 
+      ? `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+      : url;
     
     if (newTab) {
       newTab.document.write(`
@@ -27,7 +32,7 @@ export function UnblockedGames() {
           </style>
         </head>
         <body>
-          <iframe src="${url}" allowfullscreen></iframe>
+          <iframe src="${finalUrl}" allowfullscreen></iframe>
         </body>
         </html>
       `);
@@ -49,7 +54,7 @@ export function UnblockedGames() {
         {UNBLOCKED_GAMES.map((game) => (
           <Button
             key={game.id}
-            onClick={() => launchGame(game.url, game.name)}
+            onClick={() => launchGame(game.url, game.name, game.useProxy)}
             variant="outline"
             className="h-auto py-4 flex items-center gap-3 bg-secondary/30 hover:bg-primary/20 border-primary/30 hover:border-primary/50 transition-all group"
           >
