@@ -2,7 +2,7 @@ import { Rocket, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const UNBLOCKED_GAMES = [
-  { id: 'roblox', name: 'Roblox', url: 'https://nowgg.fun/apps/a/19900/b.html', description: 'Play Roblox online', category: 'sandbox', useProxy: true },
+  { id: 'roblox', name: 'Roblox', url: 'https://nowgg.fun/apps/a/19900/b.html', description: 'Play Roblox online', category: 'sandbox', useProxy: false },
   { id: 'slope', name: 'Slope', url: 'https://slope-online.github.io/', description: 'Fast-paced ball rolling', category: 'action' },
   { id: 'run3', name: 'Run 3', url: 'https://run3.io/', description: 'Endless runner in space', category: 'runner' },
   { id: 'ovo', name: 'OvO', url: 'https://ovo-game-online.github.io/', description: 'Parkour platformer', category: 'platformer' },
