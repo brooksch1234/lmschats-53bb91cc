@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 const SUPABASE_URL = "https://pvqvqeehokvcplrjenfr.supabase.co";
 
 const UNBLOCKED_GAMES = [
-  { id: 'roblox', name: 'Roblox', url: 'https://nowgg.fun/apps/a/19900/b.html', description: 'Play Roblox online', category: 'sandbox', useProxy: true },
+  { id: 'roblox', name: 'Roblox', url: 'https://136.ip.nowgg.fun/apps/a/19900/b.html', description: 'Play Roblox online', category: 'sandbox', useProxy: true },
   { id: 'slope', name: 'Slope', url: 'https://slope-online.github.io/', description: 'Fast-paced ball rolling', category: 'action', useProxy: true },
   { id: 'run3', name: 'Run 3', url: 'https://run3.io/', description: 'Endless runner in space', category: 'runner', useProxy: true },
   { id: 'ovo', name: 'OvO', url: 'https://ovo-game-online.github.io/', description: 'Parkour platformer', category: 'platformer', useProxy: true },
