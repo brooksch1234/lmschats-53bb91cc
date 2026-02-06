@@ -18,7 +18,10 @@ const UNBLOCKED_GAMES = [
 export function UnblockedGames() {
   const [loadingGame, setLoadingGame] = useState<string | null>(null);
 
-  const launchGame = async (url: string, gameName: string, gameId: string, useProxy?: boolean) => {
+  const launchGame = async (e: React.MouseEvent, url: string, gameName: string, gameId: string, useProxy?: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     // For Roblox, use the CORS proxy directly without modifying internal links
     if (gameId === 'roblox') {
       const corsProxyUrl = `https://corsproxy.io/?key=1ef8a08d&url=${encodeURIComponent(url)}`;
@@ -122,7 +125,8 @@ export function UnblockedGames() {
         {UNBLOCKED_GAMES.map((game) => (
           <Button
             key={game.id}
-            onClick={() => launchGame(game.url, game.name, game.id, game.useProxy)}
+            type="button"
+            onClick={(e) => launchGame(e, game.url, game.name, game.id, game.useProxy)}
             variant="outline"
             disabled={loadingGame === game.id}
             className="h-auto py-4 flex items-center gap-3 bg-secondary/30 hover:bg-primary/20 border-primary/30 hover:border-primary/50 transition-all group"
