@@ -19,6 +19,34 @@ export function UnblockedGames() {
   const [loadingGame, setLoadingGame] = useState<string | null>(null);
 
   const launchGame = async (url: string, gameName: string, gameId: string, useProxy?: boolean) => {
+    // For Roblox, use the CORS proxy directly without modifying internal links
+    if (gameId === 'roblox') {
+      const corsProxyUrl = `https://corsproxy.io/?key=1ef8a08d&url=${encodeURIComponent(url)}`;
+      const newTab = window.open('about:blank', '_blank');
+      if (newTab) {
+        newTab.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>${gameName}</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { overflow: hidden; background: #000; }
+              iframe { width: 100vw; height: 100vh; border: none; }
+            </style>
+          </head>
+          <body>
+            <iframe src="${corsProxyUrl}" allowfullscreen></iframe>
+          </body>
+          </html>
+        `);
+        newTab.document.close();
+      } else {
+        toast.error('Please allow popups for this site');
+      }
+      return;
+    }
+
     if (useProxy) {
       setLoadingGame(gameId);
       try {
