@@ -24,7 +24,7 @@ export function UnblockedGames() {
     
     // For Roblox, use the CORS proxy directly without modifying internal links
     if (gameId === 'roblox') {
-      const corsProxyUrl = `https://corsproxy.io/?key=1ef8a08d&url=${encodeURIComponent(url)}`;
+      const corsProxyUrl = `https://corsproxy.io/?key=1ef8a08d&url=${url}`;
       const newTab = window.open('about:blank', '_blank');
       if (newTab) {
         newTab.document.write(`
