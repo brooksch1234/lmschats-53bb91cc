@@ -29,8 +29,7 @@ import {
   Wifi,
   Users,
   Menu,
-  X,
-  Gamepad2
+  X
 } from 'lucide-react';
 import {
   Dialog,
@@ -492,9 +491,6 @@ export default function ChatLayout() {
 
           {/* Right tools */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/games')} title="Games">
-              <Gamepad2 className="w-5 h-5" />
-            </Button>
             <MoodSelector />
             <TagSelector />
             <ThemeSelector />
