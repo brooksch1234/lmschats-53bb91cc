@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Image, Mic, Square, Users, Pin } from 'lucide-react';
+import { Send, Image, Mic, Square, Users, Pin, LogOut } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { TypingIndicator } from '@/components/TypingIndicator';
@@ -52,6 +63,7 @@ export default function GroupChatView() {
   const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [myUsername, setMyUsername] = useState('');
+  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -207,6 +219,22 @@ export default function GroupChatView() {
     if (error) toast({ title: 'Failed to update pin', description: error.message, variant: 'destructive' });
   };
 
+  const handleLeave = async () => {
+    if (!user || !groupId) return;
+    const { error } = await supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Failed to leave', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Left group' });
+      navigate('/chats');
+    }
+  };
+
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   const pinnedMessages = messages.filter((m) => m.is_pinned);
@@ -257,7 +285,30 @@ export default function GroupChatView() {
               <p className="text-xs text-muted-foreground">{groupInfo?.member_count || 0} members</p>
             </div>
           </div>
-          {groupId && <CreatePollDialog groupId={groupId} onPollCreated={fetchPolls} />}
+          <div className="flex items-center gap-1">
+            {groupId && <CreatePollDialog groupId={groupId} onPollCreated={fetchPolls} />}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="Leave group" className="text-red-500 hover:text-red-400">
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Leave this group?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You'll stop receiving messages and need to be re-added to rejoin.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLeave} className="bg-red-600 hover:bg-red-500">
+                    Leave
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
 

@@ -17,6 +17,8 @@ import { TagSelector } from '@/components/TagSelector';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { MoodSelector } from '@/components/MoodSelector';
+import { useBanCheck } from '@/hooks/useBanCheck';
+import { BannedScreen } from '@/components/BannedScreen';
 import { 
   MessageCircle, 
   Plus, 
@@ -79,6 +81,7 @@ interface Profile {
 export default function ChatLayout() {
   const { user, signOut, loading: authLoading } = useAuth();
   const { isAdmin } = useAdmin();
+  const { ban } = useBanCheck();
   useNotifications();
   useOnlineStatus();
   const navigate = useNavigate();
@@ -408,6 +411,10 @@ export default function ChatLayout() {
         <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     );
+  }
+
+  if (ban) {
+    return <BannedScreen reason={ban.reason} expiresAt={ban.expires_at} onSignOut={signOut} />;
   }
 
   return (

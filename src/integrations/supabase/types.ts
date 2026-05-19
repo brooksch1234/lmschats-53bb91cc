@@ -420,6 +420,45 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          context: string | null
+          created_at: string
+          id: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          context?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          context?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string
@@ -477,6 +516,36 @@ export type Database = {
           status?: string
           updated_at?: string
           winner?: string | null
+        }
+        Relationships: []
+      }
+      user_bans: {
+        Row: {
+          active: boolean
+          banned_by: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          banned_by: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          banned_by?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reason?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -602,6 +671,14 @@ export type Database = {
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      is_user_banned: {
+        Args: { _user_id: string }
+        Returns: {
+          banned: boolean
+          expires_at: string
+          reason: string
+        }[]
       }
     }
     Enums: {
