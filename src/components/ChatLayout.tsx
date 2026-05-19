@@ -413,6 +413,10 @@ export default function ChatLayout() {
     );
   }
 
+  if (ban) {
+    return <BannedScreen reason={ban.reason} expiresAt={ban.expires_at} onSignOut={signOut} />;
+  }
+
   return (
     <div className="h-screen flex flex-col gradient-bg overflow-hidden">
       {/* Top Header/Toolbar */}
