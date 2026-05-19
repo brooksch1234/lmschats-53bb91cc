@@ -222,6 +222,26 @@ export default function ChatLayout() {
   const sendFriendRequest = async (targetUserId: string, targetUsername: string) => {
     if (!user) return false;
 
+    const connectionPayload = {
+      user1_id: user.id,
+      user2_id: targetUserId,
+    };
+
+    const { data: existingConnection } = await supabase
+      .from('connections')
+      .select('id')
+      .or(`and(user1_id.eq.${user.id},user2_id.eq.${targetUserId}),and(user1_id.eq.${targetUserId},user2_id.eq.${user.id})`)
+      .maybeSingle();
+
+    if (existingConnection) {
+      toast({
+        title: "Already connected",
+        description: `You're already connected with ${targetUsername}.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
     const { data: existing } = await supabase
       .from('friend_requests')
       .select('id, status')
@@ -229,6 +249,28 @@ export default function ChatLayout() {
       .maybeSingle();
 
     if (existing) {
+      if (existing.status === 'accepted') {
+        const { error: restoreError } = await supabase
+          .from('connections')
+          .insert(connectionPayload);
+
+        if (restoreError) {
+          toast({
+            title: "Error",
+            description: "Failed to restore the connection.",
+            variant: "destructive",
+          });
+          return false;
+        }
+
+        toast({
+          title: "Connected!",
+          description: `You're now connected with ${targetUsername}.`,
+        });
+        await fetchConnections();
+        return true;
+      }
+
       toast({
         title: "Request exists",
         description: existing.status === 'pending' ? "A friend request is already pending." : "You've already interacted with this user.",
