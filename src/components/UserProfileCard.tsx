@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { OnlineIndicator } from './OnlineIndicator';
 import { UserTags } from './UserTags';
 import { useUserTags } from '@/hooks/useUserTags';
+import { useAuth } from '@/hooks/useAuth';
+import { ReportUserDialog } from './ReportUserDialog';
 import { format } from 'date-fns';
 import { Calendar, MessageCircle } from 'lucide-react';
 
@@ -25,6 +27,7 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const { tags } = useUserTags(userId);
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -121,6 +124,13 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
                 <p className="font-mono text-sm tracking-wider">{profile.connection_code.toUpperCase()}</p>
               </div>
             </div>
+
+            {/* Report */}
+            {user && user.id !== userId && (
+              <div className="w-full pt-1">
+                <ReportUserDialog reportedUserId={userId} reportedUsername={profile.username} />
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
