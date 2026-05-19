@@ -262,6 +262,8 @@ export function AdminBansPanel() {
     setLoading(false);
   };
 
+  const [selectedUser, setSelectedUser] = useState<{ id: string; username: string } | null>(null);
+
   useEffect(() => { fetch(); }, []);
 
   const unban = async (id: string) => {
@@ -281,7 +283,6 @@ export function AdminBansPanel() {
     setSelectedUser(data);
   };
 
-  const [selectedUser, setSelectedUser] = useState<{ id: string; username: string } | null>(null);
 
   const isActive = (b: Ban) => b.active && (!b.expires_at || new Date(b.expires_at) > new Date());
 
