@@ -106,6 +106,33 @@ export function FriendRequests() {
   const handleAccept = async (request: FriendRequest) => {
     if (!user) return;
 
+    const connectionPayload = {
+      user1_id: user.id,
+      user2_id: request.from_user_id,
+    };
+
+    const { data: existingConnection } = await supabase
+      .from('connections')
+      .select('id')
+      .or(`and(user1_id.eq.${user.id},user2_id.eq.${request.from_user_id}),and(user1_id.eq.${request.from_user_id},user2_id.eq.${user.id})`)
+      .maybeSingle();
+
+    // Create connection
+    const { error: connError } = existingConnection
+      ? { error: null }
+      : await supabase
+          .from('connections')
+          .insert(connectionPayload);
+
+    if (connError) {
+      toast({
+        title: "Error",
+        description: "Failed to create connection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Update request status
     const { error: updateError } = await supabase
       .from('friend_requests')
@@ -116,23 +143,6 @@ export function FriendRequests() {
       toast({
         title: "Error",
         description: "Failed to accept request.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Create connection
-    const { error: connError } = await supabase
-      .from('connections')
-      .insert({
-        user1_id: request.from_user_id,
-        user2_id: user.id,
-      });
-
-    if (connError) {
-      toast({
-        title: "Error",
-        description: "Failed to create connection.",
         variant: "destructive",
       });
       return;
