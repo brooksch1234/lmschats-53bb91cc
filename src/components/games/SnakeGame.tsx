@@ -23,7 +23,7 @@ export function SnakeGame() {
   const [direction, setDirection] = useState<Direction>('right');
   
   const directionRef = useRef<Direction>('right');
-  const gameLoopRef = useRef<NodeJS.Timeout>();
+  const gameLoopRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     const saved = localStorage.getItem('snake-best');
