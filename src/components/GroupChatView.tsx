@@ -219,6 +219,22 @@ export default function GroupChatView() {
     if (error) toast({ title: 'Failed to update pin', description: error.message, variant: 'destructive' });
   };
 
+  const handleLeave = async () => {
+    if (!user || !groupId) return;
+    const { error } = await supabase
+      .from('group_members')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Failed to leave', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Left group' });
+      navigate('/chats');
+    }
+  };
+
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   const pinnedMessages = messages.filter((m) => m.is_pinned);
