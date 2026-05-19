@@ -218,16 +218,6 @@ export function NotificationBell() {
       .or(`and(user1_id.eq.${user.id},user2_id.eq.${request.from_user_id}),and(user1_id.eq.${request.from_user_id},user2_id.eq.${user.id})`)
       .maybeSingle();
 
-    const { error: updateError } = await supabase
-      .from('friend_requests')
-      .update({ status: 'accepted' })
-      .eq('id', request.id);
-
-    if (updateError) {
-      toast({ title: "Error", description: "Failed to accept request.", variant: "destructive" });
-      return;
-    }
-
     const { error: connError } = existingConnection
       ? { error: null }
       : await supabase
@@ -236,6 +226,16 @@ export function NotificationBell() {
 
     if (connError) {
       toast({ title: "Error", description: "Failed to create connection.", variant: "destructive" });
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from('friend_requests')
+      .update({ status: 'accepted' })
+      .eq('id', request.id);
+
+    if (updateError) {
+      toast({ title: "Error", description: "Failed to accept request.", variant: "destructive" });
       return;
     }
 

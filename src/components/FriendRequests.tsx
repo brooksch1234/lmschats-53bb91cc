@@ -117,21 +117,6 @@ export function FriendRequests() {
       .or(`and(user1_id.eq.${user.id},user2_id.eq.${request.from_user_id}),and(user1_id.eq.${request.from_user_id},user2_id.eq.${user.id})`)
       .maybeSingle();
 
-    // Update request status
-    const { error: updateError } = await supabase
-      .from('friend_requests')
-      .update({ status: 'accepted' })
-      .eq('id', request.id);
-
-    if (updateError) {
-      toast({
-        title: "Error",
-        description: "Failed to accept request.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Create connection
     const { error: connError } = existingConnection
       ? { error: null }
@@ -143,6 +128,21 @@ export function FriendRequests() {
       toast({
         title: "Error",
         description: "Failed to create connection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update request status
+    const { error: updateError } = await supabase
+      .from('friend_requests')
+      .update({ status: 'accepted' })
+      .eq('id', request.id);
+
+    if (updateError) {
+      toast({
+        title: "Error",
+        description: "Failed to accept request.",
         variant: "destructive",
       });
       return;
