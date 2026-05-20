@@ -17,21 +17,35 @@ import { TagSelector } from '@/components/TagSelector';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { MoodSelector } from '@/components/MoodSelector';
+import { ProfileSettings } from '@/components/ProfileSettings';
 import { useBanCheck } from '@/hooks/useBanCheck';
 import { BannedScreen } from '@/components/BannedScreen';
-import { 
-  MessageCircle, 
-  Plus, 
-  Copy, 
-  Check, 
-  LogOut, 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  MessageCircle,
+  Plus,
+  Copy,
+  Check,
+  LogOut,
   UserPlus,
   Hash,
   Shield,
   Wifi,
   Users,
   Menu,
-  X
+  X,
+  Search,
+  Trash2,
 } from 'lucide-react';
 import {
   Dialog,
