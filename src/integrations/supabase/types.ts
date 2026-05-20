@@ -386,6 +386,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          allow_username_search: boolean
           avatar_url: string | null
           bio: string | null
           connection_code: string
@@ -397,6 +398,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          allow_username_search?: boolean
           avatar_url?: string | null
           bio?: string | null
           connection_code?: string
@@ -408,6 +410,7 @@ export type Database = {
           username: string
         }
         Update: {
+          allow_username_search?: boolean
           avatar_url?: string | null
           bio?: string | null
           connection_code?: string

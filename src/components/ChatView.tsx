@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Image, Mic, Square } from 'lucide-react';
+import { Send, Image, Mic, Square, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { TypingIndicator } from '@/components/TypingIndicator';
@@ -16,6 +16,17 @@ import { MessageReactions } from '@/components/MessageReactions';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { UserProfileCard } from '@/components/UserProfileCard';
 import { ChatSearch } from '@/components/ChatSearch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Message {
   id: string;
@@ -137,6 +148,12 @@ export default function ChatView() {
           const newMsg = payload.new as Message;
           setMessages((prev) => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
         }
+      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages', filter: `connection_id=eq.${connectionId}` },
+        (payload) => {
+          const oldId = (payload.old as { id: string }).id;
+          setMessages((prev) => prev.filter(m => m.id !== oldId));
+        }
       ).subscribe();
     return () => { supabase.removeChannel(channel); };
   };
@@ -145,10 +162,29 @@ export default function ChatView() {
     if (!user || !connectionId || !newMessage.trim()) return;
     setSending(true);
     stopTyping();
-    const { error } = await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: newMessage.trim(), message_type: 'text' });
-    if (error) toast({ title: "Failed to send", description: error.message, variant: "destructive" });
-    else setNewMessage('');
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({ connection_id: connectionId, sender_id: user.id, content: newMessage.trim(), message_type: 'text' })
+      .select()
+      .single();
+    if (error) {
+      toast({ title: "Failed to send", description: error.message, variant: "destructive" });
+    } else {
+      setNewMessage('');
+      if (data) {
+        setMessages((prev) => prev.some(m => m.id === data.id) ? prev : [...prev, data as Message]);
+      }
+    }
     setSending(false);
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    setMessages((prev) => prev.filter(m => m.id !== messageId));
+    const { error } = await supabase.from('messages').delete().eq('id', messageId);
+    if (error) {
+      toast({ title: 'Failed to delete', description: error.message, variant: 'destructive' });
+      fetchConnectionAndMessages();
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,12 +304,40 @@ export default function ChatView() {
                     ref={(el) => { messageRefs.current[message.id] = el; }}
                     className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group transition-colors rounded-lg`}
                   >
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
-                      {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
-                      {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
-                      {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
-                      <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
-                      <MessageReactions messageId={message.id} isOwn={isOwn} />
+                    <div className="flex items-end gap-1 max-w-[80%]">
+                      {isOwn && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                              title="Delete message"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This message will be removed for everyone in this chat. This can't be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteMessage(message.id)} className="bg-red-600 hover:bg-red-500">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      <div className={`rounded-2xl px-4 py-3 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
+                        {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
+                        {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
+                        {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
+                        <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
+                        <MessageReactions messageId={message.id} isOwn={isOwn} />
+                      </div>
                     </div>
                   </div>
                 </div>

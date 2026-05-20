@@ -17,21 +17,35 @@ import { TagSelector } from '@/components/TagSelector';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { MoodSelector } from '@/components/MoodSelector';
+import { ProfileSettings } from '@/components/ProfileSettings';
 import { useBanCheck } from '@/hooks/useBanCheck';
 import { BannedScreen } from '@/components/BannedScreen';
-import { 
-  MessageCircle, 
-  Plus, 
-  Copy, 
-  Check, 
-  LogOut, 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  MessageCircle,
+  Plus,
+  Copy,
+  Check,
+  LogOut,
   UserPlus,
   Hash,
   Shield,
   Wifi,
   Users,
   Menu,
-  X
+  X,
+  Search,
+  Trash2,
 } from 'lucide-react';
 import {
   Dialog,
@@ -99,6 +113,9 @@ export default function ChatLayout() {
   const [nearbyUsers, setNearbyUsers] = useState<Profile[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [searching, setSearching] = useState(false);
 
   const activeConnectionId = params.connectionId;
   const activeGroupId = params.groupId;
@@ -384,6 +401,34 @@ export default function ChatLayout() {
     }
   };
 
+  const searchByUsername = async (q: string) => {
+    if (!user || !q.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, username, connection_code, allow_username_search')
+      .ilike('username', `%${q.trim()}%`)
+      .eq('allow_username_search', true)
+      .neq('id', user.id)
+      .limit(20);
+    setSearchResults((data as Profile[]) || []);
+    setSearching(false);
+  };
+
+  const handleUnlink = async (connectionId: string, username?: string) => {
+    const { error } = await supabase.from('connections').delete().eq('id', connectionId);
+    if (error) {
+      toast({ title: 'Failed to unlink', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Unlinked', description: username ? `You're no longer connected with ${username}.` : 'Connection removed.' });
+    if (activeConnectionId === connectionId) navigate('/chats');
+    fetchConnections();
+  };
+
   useEffect(() => {
     if (!user) return;
     const registerPresence = async () => {
@@ -478,8 +523,9 @@ export default function ChatLayout() {
                   <DialogTitle>Add Friends</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="nearby" className="w-full mt-2">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="nearby">Nearby</TabsTrigger>
+                    <TabsTrigger value="search">Search</TabsTrigger>
                     <TabsTrigger value="code">By Code</TabsTrigger>
                   </TabsList>
                   <TabsContent value="nearby" className="mt-4">
@@ -516,6 +562,48 @@ export default function ChatLayout() {
                       </div>
                     )}
                   </TabsContent>
+                  <TabsContent value="search" className="mt-4 space-y-3">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Search className="w-4 h-4" />
+                      Search by username
+                    </div>
+                    <Input
+                      placeholder="Type a username..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        searchByUsername(e.target.value);
+                      }}
+                      className="h-10 bg-secondary/50"
+                    />
+                    {searching ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground animate-pulse">Searching...</div>
+                    ) : searchQuery.trim() === '' ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">
+                        Only users who allow username search will appear here.
+                      </p>
+                    ) : searchResults.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No users found.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {searchResults.map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={() => connectWithUser(u.id, u.username)}
+                            disabled={connecting}
+                            className="w-full p-3 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center gap-3 transition-colors"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-semibold text-primary">
+                                {u.username.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <span className="font-medium text-foreground text-sm">{u.username}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
                   <TabsContent value="code" className="mt-4 space-y-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-2">Friend's 8-Digit Code</p>
@@ -541,6 +629,7 @@ export default function ChatLayout() {
           {/* Right tools */}
           <div className="flex items-center gap-1">
             <MoodSelector />
+            <ProfileSettings />
             <TagSelector />
             <ThemeSelector />
             <NotificationBell />
@@ -620,34 +709,69 @@ export default function ChatLayout() {
                   </div>
                 ) : (
                   connections.map((connection) => (
-                    <button
+                    <div
                       key={connection.id}
-                      onClick={() => { navigate(`/chat/${connection.id}`); setSidebarOpen(false); }}
-                      className={`w-full rounded-lg p-3 flex items-center gap-3 transition-all ${
+                      className={`group relative rounded-lg transition-all ${
                         activeConnectionId === connection.id
                           ? 'bg-primary/20 border border-primary/30'
                           : 'hover:bg-accent/50'
                       }`}
                     >
-                      <div className="relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-sm font-semibold text-primary">
-                          {connection.other_user?.username?.charAt(0).toUpperCase() || '?'}
-                        </span>
-                        {connection.other_user && (
-                          <div className="absolute -bottom-0.5 -right-0.5">
-                            <OnlineIndicator userId={connection.other_user.id} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 text-left min-w-0">
-                        <h3 className="font-medium text-foreground text-sm truncate">
-                          {connection.other_user?.username || 'Unknown'}
-                        </h3>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {connection.last_message || 'No messages yet'}
-                        </p>
-                      </div>
-                    </button>
+                      <button
+                        onClick={() => { navigate(`/chat/${connection.id}`); setSidebarOpen(false); }}
+                        className="w-full p-3 pr-10 flex items-center gap-3 text-left"
+                      >
+                        <div className="relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-sm font-semibold text-primary">
+                            {connection.other_user?.username?.charAt(0).toUpperCase() || '?'}
+                          </span>
+                          {connection.other_user && (
+                            <div className="absolute -bottom-0.5 -right-0.5">
+                              <OnlineIndicator userId={connection.other_user.id} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground text-sm truncate">
+                            {connection.other_user?.username || 'Unknown'}
+                          </h3>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {connection.last_message || 'No messages yet'}
+                          </p>
+                        </div>
+                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                            title="Unlink"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Unlink {connection.other_user?.username || 'this user'}?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              You'll stop seeing this chat. You can reconnect anytime by sending a new friend request.
+                              Your message history will be removed.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleUnlink(connection.id, connection.other_user?.username)}
+                              className="bg-red-600 hover:bg-red-500"
+                            >
+                              Unlink
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   ))
                 )}
               </div>
