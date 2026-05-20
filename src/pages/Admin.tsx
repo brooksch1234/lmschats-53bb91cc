@@ -23,6 +23,7 @@ import { format } from 'date-fns';
 import { AdminTagManager } from '@/components/AdminTagManager';
 import { AdminPremiumManager } from '@/components/AdminPremiumManager';
 import { AdminReportsPanel, AdminBansPanel } from '@/components/AdminReportsPanel';
+import { AdminRoleManager } from '@/components/AdminRoleManager';
 
 interface Stats {
   totalUsers: number;
@@ -261,6 +262,9 @@ export default function Admin() {
             </Button>
           </div>
         </div>
+
+        {/* Admin Role Manager */}
+        <AdminRoleManager />
 
         {/* Reports */}
         <AdminReportsPanel />
