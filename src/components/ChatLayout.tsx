@@ -99,6 +99,9 @@ export default function ChatLayout() {
   const [nearbyUsers, setNearbyUsers] = useState<Profile[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [searching, setSearching] = useState(false);
 
   const activeConnectionId = params.connectionId;
   const activeGroupId = params.groupId;
