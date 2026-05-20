@@ -523,8 +523,9 @@ export default function ChatLayout() {
                   <DialogTitle>Add Friends</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="nearby" className="w-full mt-2">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="nearby">Nearby</TabsTrigger>
+                    <TabsTrigger value="search">Search</TabsTrigger>
                     <TabsTrigger value="code">By Code</TabsTrigger>
                   </TabsList>
                   <TabsContent value="nearby" className="mt-4">
@@ -556,6 +557,48 @@ export default function ChatLayout() {
                               </span>
                             </div>
                             <span className="font-medium text-foreground text-sm">{nearbyUser.username}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="search" className="mt-4 space-y-3">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Search className="w-4 h-4" />
+                      Search by username
+                    </div>
+                    <Input
+                      placeholder="Type a username..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        searchByUsername(e.target.value);
+                      }}
+                      className="h-10 bg-secondary/50"
+                    />
+                    {searching ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground animate-pulse">Searching...</div>
+                    ) : searchQuery.trim() === '' ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">
+                        Only users who allow username search will appear here.
+                      </p>
+                    ) : searchResults.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No users found.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {searchResults.map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={() => connectWithUser(u.id, u.username)}
+                            disabled={connecting}
+                            className="w-full p-3 rounded-lg bg-secondary/50 hover:bg-secondary flex items-center gap-3 transition-colors"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-semibold text-primary">
+                                {u.username.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <span className="font-medium text-foreground text-sm">{u.username}</span>
                           </button>
                         ))}
                       </div>
