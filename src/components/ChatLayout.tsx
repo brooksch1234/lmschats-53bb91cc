@@ -629,6 +629,7 @@ export default function ChatLayout() {
           {/* Right tools */}
           <div className="flex items-center gap-1">
             <MoodSelector />
+            <ProfileSettings />
             <TagSelector />
             <ThemeSelector />
             <NotificationBell />
@@ -708,34 +709,69 @@ export default function ChatLayout() {
                   </div>
                 ) : (
                   connections.map((connection) => (
-                    <button
+                    <div
                       key={connection.id}
-                      onClick={() => { navigate(`/chat/${connection.id}`); setSidebarOpen(false); }}
-                      className={`w-full rounded-lg p-3 flex items-center gap-3 transition-all ${
+                      className={`group relative rounded-lg transition-all ${
                         activeConnectionId === connection.id
                           ? 'bg-primary/20 border border-primary/30'
                           : 'hover:bg-accent/50'
                       }`}
                     >
-                      <div className="relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-sm font-semibold text-primary">
-                          {connection.other_user?.username?.charAt(0).toUpperCase() || '?'}
-                        </span>
-                        {connection.other_user && (
-                          <div className="absolute -bottom-0.5 -right-0.5">
-                            <OnlineIndicator userId={connection.other_user.id} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 text-left min-w-0">
-                        <h3 className="font-medium text-foreground text-sm truncate">
-                          {connection.other_user?.username || 'Unknown'}
-                        </h3>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {connection.last_message || 'No messages yet'}
-                        </p>
-                      </div>
-                    </button>
+                      <button
+                        onClick={() => { navigate(`/chat/${connection.id}`); setSidebarOpen(false); }}
+                        className="w-full p-3 pr-10 flex items-center gap-3 text-left"
+                      >
+                        <div className="relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-sm font-semibold text-primary">
+                            {connection.other_user?.username?.charAt(0).toUpperCase() || '?'}
+                          </span>
+                          {connection.other_user && (
+                            <div className="absolute -bottom-0.5 -right-0.5">
+                              <OnlineIndicator userId={connection.other_user.id} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground text-sm truncate">
+                            {connection.other_user?.username || 'Unknown'}
+                          </h3>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {connection.last_message || 'No messages yet'}
+                          </p>
+                        </div>
+                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                            title="Unlink"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Unlink {connection.other_user?.username || 'this user'}?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              You'll stop seeing this chat. You can reconnect anytime by sending a new friend request.
+                              Your message history will be removed.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleUnlink(connection.id, connection.other_user?.username)}
+                              className="bg-red-600 hover:bg-red-500"
+                            >
+                              Unlink
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   ))
                 )}
               </div>
