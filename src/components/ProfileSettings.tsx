@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Settings, Save } from 'lucide-react';
 
@@ -14,54 +15,40 @@ export function ProfileSettings() {
   const [open, setOpen] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [allowUsernameSearch, setAllowUsernameSearch] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open && user) {
-      fetchProfile();
-    }
+    if (open && user) fetchProfile();
   }, [open, user]);
 
   const fetchProfile = async () => {
     if (!user) return;
-    
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
     if (data) {
       setDisplayName((data as any).display_name || '');
       setBio((data as any).bio || '');
+      setAllowUsernameSearch((data as any).allow_username_search ?? true);
     }
   };
 
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
-
     const { error } = await supabase
       .from('profiles')
       .update({
         display_name: displayName.trim() || null,
         bio: bio.trim() || null,
+        allow_username_search: allowUsernameSearch,
       } as any)
       .eq('id', user.id);
-
     setLoading(false);
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
     } else {
-      toast({
-        title: 'Profile updated!',
-        description: 'Your changes have been saved.',
-      });
+      toast({ title: 'Profile updated!', description: 'Your changes have been saved.' });
       setOpen(false);
     }
   };
@@ -77,7 +64,7 @@ export function ProfileSettings() {
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="displayName">Display Name</Label>
@@ -88,9 +75,6 @@ export function ProfileSettings() {
               onChange={(e) => setDisplayName(e.target.value)}
               className="bg-secondary/50"
             />
-            <p className="text-xs text-muted-foreground">
-              This is how others will see you (different from username)
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -104,11 +88,21 @@ export function ProfileSettings() {
             />
           </div>
 
-          <Button 
-            onClick={handleSave} 
-            disabled={loading}
-            className="w-full gap-2"
-          >
+          <div className="flex items-start justify-between gap-3 rounded-lg bg-secondary/30 px-3 py-3">
+            <div className="flex-1">
+              <Label htmlFor="allow-search" className="cursor-pointer">Allow username search</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                When off, others can only add you with your connection code.
+              </p>
+            </div>
+            <Switch
+              id="allow-search"
+              checked={allowUsernameSearch}
+              onCheckedChange={setAllowUsernameSearch}
+            />
+          </div>
+
+          <Button onClick={handleSave} disabled={loading} className="w-full gap-2">
             <Save className="w-4 h-4" />
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>
