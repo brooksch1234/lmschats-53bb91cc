@@ -401,6 +401,34 @@ export default function ChatLayout() {
     }
   };
 
+  const searchByUsername = async (q: string) => {
+    if (!user || !q.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearching(true);
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, username, connection_code, allow_username_search')
+      .ilike('username', `%${q.trim()}%`)
+      .eq('allow_username_search', true)
+      .neq('id', user.id)
+      .limit(20);
+    setSearchResults((data as Profile[]) || []);
+    setSearching(false);
+  };
+
+  const handleUnlink = async (connectionId: string, username?: string) => {
+    const { error } = await supabase.from('connections').delete().eq('id', connectionId);
+    if (error) {
+      toast({ title: 'Failed to unlink', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Unlinked', description: username ? `You're no longer connected with ${username}.` : 'Connection removed.' });
+    if (activeConnectionId === connectionId) navigate('/chats');
+    fetchConnections();
+  };
+
   useEffect(() => {
     if (!user) return;
     const registerPresence = async () => {
