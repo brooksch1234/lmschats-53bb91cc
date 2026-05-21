@@ -464,15 +464,23 @@ export default function GroupChatView() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}><Image className="w-5 h-5" /></Button>
             <Button variant="ghost" size="icon" onClick={startRecording} disabled={sending}><Mic className="w-5 h-5" /></Button>
-            <Input 
-              placeholder="Type a message..." 
-              value={newMessage} 
-              onChange={handleMessageInputChange} 
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} 
-              className="flex-1 h-10 bg-secondary/50 border-border/50" 
-              disabled={sending} 
-            />
-            <Button variant="hero" size="icon" className="h-10 w-10" onClick={handleSend} disabled={sending || !newMessage.trim()}><Send className="w-4 h-4" /></Button>
+            <div className="flex-1 relative">
+              <Input 
+                placeholder="Type a message..." 
+                value={newMessage} 
+                onChange={handleMessageInputChange} 
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} 
+                className="h-10 bg-secondary/50 border-border/50 pr-16" 
+                disabled={sending} 
+                maxLength={MAX_MESSAGE_LENGTH}
+              />
+              {newMessage.length > MAX_MESSAGE_LENGTH * 0.8 && (
+                <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-[10px] ${newMessage.length >= MAX_MESSAGE_LENGTH ? 'text-red-400' : 'text-muted-foreground'}`}>
+                  {newMessage.length}/{MAX_MESSAGE_LENGTH}
+                </span>
+              )}
+            </div>
+            <Button variant="hero" size="icon" className="h-10 w-10" onClick={handleSend} disabled={sending || !newMessage.trim() || newMessage.length > MAX_MESSAGE_LENGTH}><Send className="w-4 h-4" /></Button>
           </div>
         )}
       </div>
