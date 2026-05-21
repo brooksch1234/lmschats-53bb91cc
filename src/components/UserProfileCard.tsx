@@ -121,9 +121,16 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
               <OnlineIndicator userId={userId} showText />
             </div>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p className="text-sm text-muted-foreground max-w-xs">{profile.bio}</p>
+            {/* Status (Mood + Custom) */}
+            {(status?.mood || status?.custom_status) && (
+              <div className="flex items-center gap-2 bg-secondary/50 rounded-full px-3 py-1.5 text-sm">
+                {status.mood && (
+                  <span className="text-base">{MOOD_EMOJI[status.mood] || '💬'}</span>
+                )}
+                <span className="text-foreground">
+                  {status.custom_status || status.mood}
+                </span>
+              </div>
             )}
 
             {/* Stats */}
