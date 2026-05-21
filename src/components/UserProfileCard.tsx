@@ -133,6 +133,12 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
               </div>
             )}
 
+            {/* Bio */}
+            {profile.bio && (
+              <p className="text-sm text-muted-foreground max-w-xs">{profile.bio}</p>
+            )}
+
+
             {/* Stats */}
             <div className="flex gap-6 pt-2">
               <div className="flex items-center gap-2 text-muted-foreground">
