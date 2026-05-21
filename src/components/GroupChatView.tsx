@@ -146,8 +146,23 @@ export default function GroupChatView() {
           const updatedMsg = payload.new as GroupMessage;
           setMessages((prev) => prev.map((m) => (m.id === updatedMsg.id ? { ...m, is_pinned: updatedMsg.is_pinned } : m)));
         }
+      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` },
+        (payload) => {
+          const oldId = (payload.old as { id: string }).id;
+          setMessages((prev) => prev.filter((m) => m.id !== oldId));
+        }
       ).subscribe();
     return () => { supabase.removeChannel(channel); };
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    const { error } = await supabase.from('group_messages').delete().eq('id', messageId);
+    if (error) {
+      toast({ title: 'Failed to delete', description: error.message, variant: 'destructive' });
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    }
   };
 
   const handleSend = async () => {
