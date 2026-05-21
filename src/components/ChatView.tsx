@@ -197,12 +197,34 @@ export default function ChatView() {
     if (!file || !user || !connectionId) return;
     if (file.size > MAX_IMAGE_SIZE) { toast({ title: "File too large", description: "Max 5MB.", variant: "destructive" }); return; }
     setSending(true);
+    let uploadedPath: string | null = null;
     try {
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
-      await supabase.storage.from('chat-media').upload(fileName, file);
+      const { error: upErr } = await supabase.storage.from('chat-media').upload(fileName, file);
+      if (upErr) throw upErr;
+      uploadedPath = fileName;
       const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(fileName);
+
+      // Moderate the image before posting
+      const { data: verdict } = await supabase.functions.invoke('moderate-image', {
+        body: { imageUrl: urlData.publicUrl },
+      });
+      if (verdict && verdict.safe === false) {
+        await supabase.storage.from('chat-media').remove([fileName]);
+        uploadedPath = null;
+        toast({
+          title: 'Image blocked',
+          description: verdict.reason || 'This image was flagged as inappropriate.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'image', media_url: urlData.publicUrl });
-    } catch { toast({ title: "Upload failed", variant: "destructive" }); }
+    } catch {
+      if (uploadedPath) await supabase.storage.from('chat-media').remove([uploadedPath]);
+      toast({ title: "Upload failed", variant: "destructive" });
+    }
     finally { setSending(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
 
