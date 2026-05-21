@@ -23,8 +23,20 @@ interface Profile {
   connection_code: string;
 }
 
+interface Status {
+  mood: string | null;
+  custom_status: string | null;
+}
+
+const MOOD_EMOJI: Record<string, string> = {
+  Happy: '😊', Cool: '😎', Studying: '🤓', Tired: '😴', Gaming: '🎮',
+  Vibing: '🎵', Busy: '📚', DND: '🤫', Stressed: '😤', Excited: '🎉',
+  Thinking: '💭', Break: '☕',
+};
+
 export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const { tags } = useUserTags(userId);
   const { user } = useAuth();
@@ -33,6 +45,7 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
   useEffect(() => {
     if (open) {
       fetchProfile();
+      fetchStatus();
       fetchMessageCount();
     }
   }, [open, userId]);
@@ -43,8 +56,16 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-    
     if (data) setProfile(data);
+  };
+
+  const fetchStatus = async () => {
+    const { data } = await supabase
+      .from('user_status')
+      .select('mood, custom_status')
+      .eq('user_id', userId)
+      .maybeSingle();
+    setStatus(data || null);
   };
 
   const fetchMessageCount = async () => {
