@@ -201,3 +201,31 @@
     box-shadow: 0 0 40px hsl(205 85% 55% / 0.4);
   }
 }
+
+/* Animated theme backgrounds (applied to body via data-theme-anim) */
+body[data-theme-anim="aurora"] {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e, #0f0c29);
+  background-size: 400% 400%;
+  animation: themeGradient 18s ease infinite;
+}
+body[data-theme-anim="cyberpunk"] {
+  background: linear-gradient(135deg, #1a0033, #ff0080, #00ffe0, #1a0033);
+  background-size: 400% 400%;
+  animation: themeGradient 14s ease infinite;
+}
+body[data-theme-anim="galaxy"] {
+  background: linear-gradient(135deg, #000428, #004e92, #2a0845, #000428);
+  background-size: 400% 400%;
+  animation: themeGradient 22s ease infinite;
+}
+body[data-theme-anim="sunset"] {
+  background: linear-gradient(135deg, #ff512f, #f09819, #ff512f, #dd2476);
+  background-size: 400% 400%;
+  animation: themeGradient 16s ease infinite;
+}
+
+@keyframes themeGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
