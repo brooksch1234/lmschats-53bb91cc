@@ -50,6 +50,7 @@ interface GroupInfo {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_DURATION = 60;
+const MAX_MESSAGE_LENGTH = 5000;
 
 export default function GroupChatView() {
   const { groupId } = useParams<{ groupId: string }>();
