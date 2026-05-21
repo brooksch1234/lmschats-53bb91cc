@@ -50,6 +50,7 @@ interface GroupInfo {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_DURATION = 60;
+const MAX_MESSAGE_LENGTH = 5000;
 
 export default function GroupChatView() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -167,6 +168,10 @@ export default function GroupChatView() {
 
   const handleSend = async () => {
     if (!user || !groupId || !newMessage.trim()) return;
+    if (newMessage.length > MAX_MESSAGE_LENGTH) {
+      toast({ title: 'Message too long', description: `Messages must be under ${MAX_MESSAGE_LENGTH} characters.`, variant: 'destructive' });
+      return;
+    }
     setSending(true);
     stopTyping();
     const { error } = await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, content: newMessage.trim(), message_type: 'text' });
@@ -180,12 +185,33 @@ export default function GroupChatView() {
     if (!file || !user || !groupId) return;
     if (file.size > MAX_IMAGE_SIZE) { toast({ title: "File too large", description: "Max 5MB.", variant: "destructive" }); return; }
     setSending(true);
+    let uploadedPath: string | null = null;
     try {
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
-      await supabase.storage.from('chat-media').upload(fileName, file);
+      const { error: upErr } = await supabase.storage.from('chat-media').upload(fileName, file);
+      if (upErr) throw upErr;
+      uploadedPath = fileName;
       const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(fileName);
+
+      const { data: verdict } = await supabase.functions.invoke('moderate-image', {
+        body: { imageUrl: urlData.publicUrl },
+      });
+      if (verdict && verdict.safe === false) {
+        await supabase.storage.from('chat-media').remove([fileName]);
+        uploadedPath = null;
+        toast({
+          title: 'Image blocked',
+          description: verdict.reason || 'This image was flagged as inappropriate.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, message_type: 'image', media_url: urlData.publicUrl });
-    } catch { toast({ title: "Upload failed", variant: "destructive" }); }
+    } catch {
+      if (uploadedPath) await supabase.storage.from('chat-media').remove([uploadedPath]);
+      toast({ title: "Upload failed", variant: "destructive" });
+    }
     finally { setSending(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
 
@@ -438,15 +464,23 @@ export default function GroupChatView() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}><Image className="w-5 h-5" /></Button>
             <Button variant="ghost" size="icon" onClick={startRecording} disabled={sending}><Mic className="w-5 h-5" /></Button>
-            <Input 
-              placeholder="Type a message..." 
-              value={newMessage} 
-              onChange={handleMessageInputChange} 
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} 
-              className="flex-1 h-10 bg-secondary/50 border-border/50" 
-              disabled={sending} 
-            />
-            <Button variant="hero" size="icon" className="h-10 w-10" onClick={handleSend} disabled={sending || !newMessage.trim()}><Send className="w-4 h-4" /></Button>
+            <div className="flex-1 relative">
+              <Input 
+                placeholder="Type a message..." 
+                value={newMessage} 
+                onChange={handleMessageInputChange} 
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} 
+                className="h-10 bg-secondary/50 border-border/50 pr-16" 
+                disabled={sending} 
+                maxLength={MAX_MESSAGE_LENGTH}
+              />
+              {newMessage.length > MAX_MESSAGE_LENGTH * 0.8 && (
+                <span className={`absolute right-2 top-1/2 -translate-y-1/2 text-[10px] ${newMessage.length >= MAX_MESSAGE_LENGTH ? 'text-red-400' : 'text-muted-foreground'}`}>
+                  {newMessage.length}/{MAX_MESSAGE_LENGTH}
+                </span>
+              )}
+            </div>
+            <Button variant="hero" size="icon" className="h-10 w-10" onClick={handleSend} disabled={sending || !newMessage.trim() || newMessage.length > MAX_MESSAGE_LENGTH}><Send className="w-4 h-4" /></Button>
           </div>
         )}
       </div>

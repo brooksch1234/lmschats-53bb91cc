@@ -151,13 +151,15 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
               </div>
             </div>
 
-            {/* Connection Code */}
-            <div className="w-full pt-2">
-              <div className="bg-secondary/50 rounded-lg px-4 py-2">
-                <p className="text-xs text-muted-foreground mb-1">Connection Code</p>
-                <p className="font-mono text-sm tracking-wider">{profile.connection_code.toUpperCase()}</p>
+            {/* Connection Code — only visible to the profile owner */}
+            {user?.id === userId && (
+              <div className="w-full pt-2">
+                <div className="bg-secondary/50 rounded-lg px-4 py-2">
+                  <p className="text-xs text-muted-foreground mb-1">Your Connection Code</p>
+                  <p className="font-mono text-sm tracking-wider">{profile.connection_code.toUpperCase()}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Report */}
             {user && user.id !== userId && (
