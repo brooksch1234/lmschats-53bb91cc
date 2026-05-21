@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Image, Mic, Square, Users, Pin, LogOut } from 'lucide-react';
+import { Send, Image, Mic, Square, Users, Pin, LogOut, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
