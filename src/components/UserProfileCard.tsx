@@ -23,8 +23,20 @@ interface Profile {
   connection_code: string;
 }
 
+interface Status {
+  mood: string | null;
+  custom_status: string | null;
+}
+
+const MOOD_EMOJI: Record<string, string> = {
+  Happy: '😊', Cool: '😎', Studying: '🤓', Tired: '😴', Gaming: '🎮',
+  Vibing: '🎵', Busy: '📚', DND: '🤫', Stressed: '😤', Excited: '🎉',
+  Thinking: '💭', Break: '☕',
+};
+
 export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const { tags } = useUserTags(userId);
   const { user } = useAuth();
@@ -33,6 +45,7 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
   useEffect(() => {
     if (open) {
       fetchProfile();
+      fetchStatus();
       fetchMessageCount();
     }
   }, [open, userId]);
@@ -43,8 +56,16 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-    
     if (data) setProfile(data);
+  };
+
+  const fetchStatus = async () => {
+    const { data } = await supabase
+      .from('user_status')
+      .select('mood, custom_status')
+      .eq('user_id', userId)
+      .maybeSingle();
+    setStatus(data || null);
   };
 
   const fetchMessageCount = async () => {
@@ -100,10 +121,23 @@ export function UserProfileCard({ userId, trigger }: UserProfileCardProps) {
               <OnlineIndicator userId={userId} showText />
             </div>
 
+            {/* Status (Mood + Custom) */}
+            {(status?.mood || status?.custom_status) && (
+              <div className="flex items-center gap-2 bg-secondary/50 rounded-full px-3 py-1.5 text-sm">
+                {status.mood && (
+                  <span className="text-base">{MOOD_EMOJI[status.mood] || '💬'}</span>
+                )}
+                <span className="text-foreground">
+                  {status.custom_status || status.mood}
+                </span>
+              </div>
+            )}
+
             {/* Bio */}
             {profile.bio && (
               <p className="text-sm text-muted-foreground max-w-xs">{profile.bio}</p>
             )}
+
 
             {/* Stats */}
             <div className="flex gap-6 pt-2">

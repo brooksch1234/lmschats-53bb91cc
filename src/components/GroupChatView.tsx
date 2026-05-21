@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Image, Mic, Square, Users, Pin, LogOut } from 'lucide-react';
+import { Send, Image, Mic, Square, Users, Pin, LogOut, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -146,8 +146,23 @@ export default function GroupChatView() {
           const updatedMsg = payload.new as GroupMessage;
           setMessages((prev) => prev.map((m) => (m.id === updatedMsg.id ? { ...m, is_pinned: updatedMsg.is_pinned } : m)));
         }
+      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` },
+        (payload) => {
+          const oldId = (payload.old as { id: string }).id;
+          setMessages((prev) => prev.filter((m) => m.id !== oldId));
+        }
       ).subscribe();
     return () => { supabase.removeChannel(channel); };
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    const { error } = await supabase.from('group_messages').delete().eq('id', messageId);
+    if (error) {
+      toast({ title: 'Failed to delete', description: error.message, variant: 'destructive' });
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    }
   };
 
   const handleSend = async () => {
@@ -346,25 +361,53 @@ export default function GroupChatView() {
                       </span>
                     </div>
                   )}
-                  <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
-                      {!isOwn && message.sender && (
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-xs font-medium text-primary">{message.sender.username}</p>
-                          <UserTags tags={senderTags} size="sm" />
-                        </div>
+                  <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group transition-colors`}>
+                    <div className="flex items-end gap-1 max-w-[80%]">
+                      {isOwn && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                              title="Delete message"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This message will be removed for everyone in this group. This can't be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteMessage(message.id)} className="bg-red-600 hover:bg-red-500">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
-                      {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
-                      {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
-                      {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className={`text-xs ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
-                        {message.is_pinned && <Pin className="w-3 h-3 text-yellow-500" />}
-                        {isCreator && (
-                          <button onClick={() => togglePin(message.id, !!message.is_pinned)} className={`text-xs hover:text-yellow-500 ${isOwn ? 'text-primary-foreground/50' : 'text-muted-foreground'}`}>
-                            {message.is_pinned ? 'Unpin' : 'Pin'}
-                          </button>
+                      <div className={`rounded-2xl px-4 py-3 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
+                        {!isOwn && message.sender && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-xs font-medium text-primary">{message.sender.username}</p>
+                            <UserTags tags={senderTags} size="sm" />
+                          </div>
                         )}
+                        {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
+                        {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
+                        {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={`text-xs ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
+                          {message.is_pinned && <Pin className="w-3 h-3 text-yellow-500" />}
+                          {isCreator && (
+                            <button onClick={() => togglePin(message.id, !!message.is_pinned)} className={`text-xs hover:text-yellow-500 ${isOwn ? 'text-primary-foreground/50' : 'text-muted-foreground'}`}>
+                              {message.is_pinned ? 'Unpin' : 'Pin'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
