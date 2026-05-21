@@ -161,6 +161,10 @@ export default function ChatView() {
 
   const handleSend = async () => {
     if (!user || !connectionId || !newMessage.trim()) return;
+    if (newMessage.length > MAX_MESSAGE_LENGTH) {
+      toast({ title: 'Message too long', description: `Messages must be under ${MAX_MESSAGE_LENGTH} characters.`, variant: 'destructive' });
+      return;
+    }
     setSending(true);
     stopTyping();
     const { data, error } = await supabase
