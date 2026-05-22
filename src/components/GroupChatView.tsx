@@ -422,7 +422,7 @@ export default function GroupChatView() {
                             <UserTags tags={senderTags} size="sm" />
                           </div>
                         )}
-                        {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>}
+                        {message.message_type === 'text' && <p className="text-sm whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.content}</p>}
                         {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
                         {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
                         <div className="flex items-center gap-2 mt-1">
