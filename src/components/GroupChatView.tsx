@@ -415,7 +415,7 @@ export default function GroupChatView() {
                           </AlertDialogContent>
                         </AlertDialog>
                       )}
-                      <div className={`rounded-2xl px-4 py-3 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
+                      <div className={`rounded-2xl px-4 py-3 min-w-0 ${isOwn ? 'bg-primary text-primary-foreground rounded-br-md' : 'glass-card rounded-bl-md'}`}>
                         {!isOwn && message.sender && (
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-xs font-medium text-primary">{message.sender.username}</p>
