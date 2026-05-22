@@ -388,7 +388,7 @@ export default function GroupChatView() {
                     </div>
                   )}
                   <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group transition-colors`}>
-                    <div className="flex items-end gap-1 max-w-[80%]">
+                    <div className="flex items-end gap-1 max-w-[80%] sm:max-w-[60%] min-w-0">
                       {isOwn && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
