@@ -28,124 +28,105 @@ interface Theme {
 }
 
 const themes: Theme[] = [
-  // FREE
+  // ---------- FREE (4) ----------
   {
-    id: 'default',
-    name: 'Ocean Blue',
-    isPremium: false,
-    colors: {
-      primary: '205 85% 55%',
-      background: '215 35% 18%',
-      accent: '205 60% 25%',
-      foreground: '210 20% 95%',
-      card: '215 32% 22%',
-      primaryGlow: '205 85% 65%',
-    },
+    id: 'default', name: 'Ocean Blue', isPremium: false,
+    colors: { primary: '205 85% 55%', background: '215 35% 18%', accent: '205 60% 25%', foreground: '210 20% 95%', card: '215 32% 22%', primaryGlow: '205 85% 65%' },
     swatch: ['#1f3a5f', '#3b82f6', '#60a5fa'],
   },
   {
-    id: 'slate',
-    name: 'Midnight Slate',
-    isPremium: false,
-    colors: {
-      primary: '220 15% 75%',
-      background: '220 18% 12%',
-      accent: '220 15% 22%',
-      foreground: '220 15% 95%',
-      card: '220 18% 16%',
-      primaryGlow: '220 15% 85%',
-    },
+    id: 'slate', name: 'Midnight Slate', isPremium: false,
+    colors: { primary: '220 15% 75%', background: '220 18% 12%', accent: '220 15% 22%', foreground: '220 15% 95%', card: '220 18% 16%', primaryGlow: '220 15% 85%' },
     swatch: ['#1f2937', '#374151', '#9ca3af'],
   },
-  // PREMIUM ANIMATED
   {
-    id: 'aurora',
-    name: 'Aurora',
-    isPremium: true,
-    animated: 'aurora',
-    colors: {
-      primary: '260 85% 65%',
-      background: '250 40% 12%',
-      accent: '280 50% 25%',
-      foreground: '260 20% 96%',
-      card: '250 35% 16%',
-      primaryGlow: '290 85% 70%',
-    },
+    id: 'crimson', name: 'Crimson Night', isPremium: false,
+    colors: { primary: '0 75% 55%', background: '0 20% 12%', accent: '0 40% 22%', foreground: '0 10% 96%', card: '0 22% 17%', primaryGlow: '10 80% 60%' },
+    swatch: ['#3d0a0a', '#dc2626', '#fca5a5'],
+  },
+  {
+    id: 'forest', name: 'Deep Forest', isPremium: false,
+    colors: { primary: '145 55% 50%', background: '150 25% 10%', accent: '145 35% 20%', foreground: '145 15% 95%', card: '150 22% 15%', primaryGlow: '145 60% 60%' },
+    swatch: ['#0b2a1d', '#15803d', '#86efac'],
+  },
+
+  // ---------- PREMIUM ANIMATED (10) ----------
+  {
+    id: 'aurora', name: 'Aurora', isPremium: true, animated: 'aurora',
+    colors: { primary: '260 85% 65%', background: '250 40% 12%', accent: '280 50% 25%', foreground: '260 20% 96%', card: '250 35% 16%', primaryGlow: '290 85% 70%' },
     swatch: ['#0f0c29', '#302b63', '#a78bfa'],
   },
   {
-    id: 'cyberpunk',
-    name: 'Cyberpunk',
-    isPremium: true,
-    animated: 'cyberpunk',
-    colors: {
-      primary: '325 95% 60%',
-      background: '280 50% 8%',
-      accent: '180 90% 35%',
-      foreground: '180 100% 95%',
-      card: '280 45% 12%',
-      primaryGlow: '180 100% 60%',
-    },
+    id: 'cyberpunk', name: 'Cyberpunk', isPremium: true, animated: 'cyberpunk',
+    colors: { primary: '325 95% 60%', background: '280 50% 8%', accent: '180 90% 35%', foreground: '180 100% 95%', card: '280 45% 12%', primaryGlow: '180 100% 60%' },
     swatch: ['#ff0080', '#00ffe0', '#1a0033'],
   },
   {
-    id: 'galaxy',
-    name: 'Galaxy',
-    isPremium: true,
-    animated: 'galaxy',
-    colors: {
-      primary: '220 90% 60%',
-      background: '230 70% 8%',
-      accent: '270 60% 25%',
-      foreground: '220 30% 96%',
-      card: '230 60% 12%',
-      primaryGlow: '270 80% 70%',
-    },
+    id: 'galaxy', name: 'Galaxy', isPremium: true, animated: 'galaxy',
+    colors: { primary: '220 90% 60%', background: '230 70% 8%', accent: '270 60% 25%', foreground: '220 30% 96%', card: '230 60% 12%', primaryGlow: '270 80% 70%' },
     swatch: ['#000428', '#004e92', '#2a0845'],
   },
   {
-    id: 'sunset',
-    name: 'Sunset Blaze',
-    isPremium: true,
-    animated: 'sunset',
-    colors: {
-      primary: '15 90% 60%',
-      background: '340 35% 12%',
-      accent: '30 80% 35%',
-      foreground: '30 30% 96%',
-      card: '340 30% 16%',
-      primaryGlow: '340 85% 60%',
-    },
+    id: 'sunset', name: 'Sunset Blaze', isPremium: true, animated: 'sunset',
+    colors: { primary: '15 90% 60%', background: '340 35% 12%', accent: '30 80% 35%', foreground: '30 30% 96%', card: '340 30% 16%', primaryGlow: '340 85% 60%' },
     swatch: ['#ff512f', '#f09819', '#dd2476'],
   },
-  // PREMIUM STATIC
   {
-    id: 'emerald',
-    name: 'Emerald Forest',
-    isPremium: true,
-    colors: {
-      primary: '160 70% 45%',
-      background: '160 25% 12%',
-      accent: '160 45% 20%',
-      foreground: '160 20% 95%',
-      card: '160 22% 18%',
-      primaryGlow: '160 70% 55%',
-    },
+    id: 'ocean', name: 'Ocean Waves', isPremium: true, animated: 'ocean',
+    colors: { primary: '195 95% 55%', background: '210 60% 10%', accent: '200 70% 25%', foreground: '195 30% 96%', card: '210 50% 14%', primaryGlow: '190 100% 65%' },
+    swatch: ['#001f3f', '#0077be', '#00d4ff'],
+  },
+  {
+    id: 'lava', name: 'Molten Lava', isPremium: true, animated: 'lava',
+    colors: { primary: '15 95% 55%', background: '10 50% 8%', accent: '25 85% 30%', foreground: '40 30% 96%', card: '10 40% 13%', primaryGlow: '40 100% 55%' },
+    swatch: ['#200000', '#ff3300', '#ffcc00'],
+  },
+  {
+    id: 'mint', name: 'Mint Breeze', isPremium: true, animated: 'mint',
+    colors: { primary: '160 80% 50%', background: '165 30% 10%', accent: '160 50% 22%', foreground: '160 20% 96%', card: '165 28% 15%', primaryGlow: '155 85% 65%' },
+    swatch: ['#003e2b', '#00b894', '#6ef3c0'],
+  },
+  {
+    id: 'bubblegum', name: 'Bubblegum', isPremium: true, animated: 'bubblegum',
+    colors: { primary: '320 90% 65%', background: '290 35% 14%', accent: '250 60% 35%', foreground: '320 30% 96%', card: '290 30% 18%', primaryGlow: '250 90% 70%' },
+    swatch: ['#ff6ec4', '#7873f5', '#ffc1e3'],
+  },
+  {
+    id: 'matrix', name: 'Matrix', isPremium: true, animated: 'matrix',
+    colors: { primary: '125 95% 50%', background: '125 50% 5%', accent: '125 70% 18%', foreground: '125 50% 90%', card: '125 40% 9%', primaryGlow: '125 100% 60%' },
+    swatch: ['#000000', '#003300', '#00ff46'],
+  },
+  {
+    id: 'volcano', name: 'Volcano', isPremium: true, animated: 'volcano',
+    colors: { primary: '10 95% 55%', background: '0 60% 7%', accent: '15 80% 28%', foreground: '20 30% 96%', card: '0 50% 12%', primaryGlow: '20 100% 55%' },
+    swatch: ['#1a0000', '#ff2200', '#ff4400'],
+  },
+  {
+    id: 'candy', name: 'Candy Land', isPremium: true, animated: 'candy',
+    colors: { primary: '335 90% 65%', background: '280 25% 16%', accent: '180 60% 35%', foreground: '40 50% 96%', card: '280 22% 20%', primaryGlow: '40 95% 65%' },
+    swatch: ['#ff6b9d', '#f8b500', '#4bc0c8'],
+  },
+
+  // ---------- PREMIUM STATIC (4) ----------
+  {
+    id: 'emerald', name: 'Emerald Forest', isPremium: true,
+    colors: { primary: '160 70% 45%', background: '160 25% 12%', accent: '160 45% 20%', foreground: '160 20% 95%', card: '160 22% 18%', primaryGlow: '160 70% 55%' },
     swatch: ['#064e3b', '#10b981', '#6ee7b7'],
   },
   {
-    id: 'rose',
-    name: 'Rose Gold',
-    isPremium: true,
-    colors: {
-      primary: '340 75% 60%',
-      background: '340 20% 13%',
-      accent: '340 50% 25%',
-      foreground: '340 20% 96%',
-      card: '340 22% 18%',
-      primaryGlow: '15 80% 65%',
-    },
+    id: 'rose', name: 'Rose Gold', isPremium: true,
+    colors: { primary: '340 75% 60%', background: '340 20% 13%', accent: '340 50% 25%', foreground: '340 20% 96%', card: '340 22% 18%', primaryGlow: '15 80% 65%' },
     swatch: ['#831843', '#ec4899', '#fda4af'],
+  },
+  {
+    id: 'royal', name: 'Royal Amethyst', isPremium: true,
+    colors: { primary: '275 70% 60%', background: '270 30% 12%', accent: '275 50% 25%', foreground: '270 20% 96%', card: '270 28% 17%', primaryGlow: '290 75% 65%' },
+    swatch: ['#3b0764', '#9333ea', '#d8b4fe'],
+  },
+  {
+    id: 'obsidian', name: 'Obsidian Gold', isPremium: true,
+    colors: { primary: '45 90% 55%', background: '40 10% 8%', accent: '40 20% 18%', foreground: '45 30% 95%', card: '40 12% 13%', primaryGlow: '45 95% 65%' },
+    swatch: ['#0d0d0d', '#1a1a1a', '#c9a84c'],
   },
 ];
 
