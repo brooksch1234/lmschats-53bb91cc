@@ -465,36 +465,37 @@ export default function ChatLayout() {
   return (
     <div className="h-screen flex flex-col gradient-bg overflow-hidden">
       {/* Top Header/Toolbar */}
-      <header className="glass-card border-b border-border/50 shrink-0 z-20">
-        <div className="px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+      <header className="bg-card/60 backdrop-blur-2xl border-b border-border/60 shrink-0 z-20 shadow-card">
+        <div className="px-3 sm:px-5 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="md:hidden"
+              className="md:hidden shrink-0"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow shrink-0">
+              <MessageCircle className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div className="hidden sm:block">
-              <h1 className="font-semibold text-foreground text-sm">LMS Chats</h1>
-              <p className="text-xs text-muted-foreground">@{profile?.username}</p>
+            <div className="hidden sm:block min-w-0">
+              <h1 className="font-display font-bold text-foreground text-sm leading-tight tracking-tight">LMS Chats</h1>
+              <p className="text-[11px] text-muted-foreground font-mono truncate">@{profile?.username}</p>
             </div>
           </div>
 
+
           {/* Center tools */}
-          <div className="flex items-center gap-2 flex-1 justify-center">
-            {/* Connection Code */}
+          <div className="flex items-center gap-1.5 bg-background/40 border border-border/60 rounded-xl p-1">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Hash className="w-4 h-4" />
+                <Button variant="ghost" size="sm" className="gap-2 h-8">
+                  <Hash className="w-4 h-4 text-primary" />
                   <span className="hidden sm:inline font-mono text-xs">{profile?.connection_code?.toUpperCase()}</span>
                 </Button>
               </PopoverTrigger>
+
               <PopoverContent className="w-72">
                 <div className="space-y-3">
                   <p className="text-sm font-medium">Your Connection Code</p>
@@ -513,11 +514,12 @@ export default function ChatLayout() {
             {/* Add Friends */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Add Friend</span>
+                <Button variant="ghost" size="sm" className="gap-2 h-8">
+                  <UserPlus className="w-4 h-4 text-primary" />
+                  <span className="hidden md:inline text-xs">Add Friend</span>
                 </Button>
               </DialogTrigger>
+
               <DialogContent className="glass-card border-border/50 sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Add Friends</DialogTitle>
@@ -626,22 +628,25 @@ export default function ChatLayout() {
             <CreateGroupDialog onGroupCreated={fetchGroupChats} />
           </div>
 
-          {/* Right tools */}
-          <div className="flex items-center gap-1">
-            <MoodSelector />
+          {/* Right: identity + utility cluster */}
+          <div className="flex items-center gap-0.5">
+            <div className="hidden sm:flex items-center gap-0.5 bg-background/40 border border-border/60 rounded-xl p-1 mr-1">
+              <MoodSelector />
+              <TagSelector />
+              <ThemeSelector />
+            </div>
             <ProfileSettings />
-            <TagSelector />
-            <ThemeSelector />
             <NotificationBell />
             {isAdmin && (
-              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} title="Admin panel">
                 <Shield className="w-5 h-5 text-primary" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <Button variant="ghost" size="icon" onClick={handleLogout} title="Sign out">
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
+
         </div>
       </header>
 
