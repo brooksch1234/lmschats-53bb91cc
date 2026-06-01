@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
 import { MoodSelector } from '@/components/MoodSelector';
 import { ProfileSettings } from '@/components/ProfileSettings';
+import { AccessibilityMenu } from '@/components/AccessibilityMenu';
 import { useBanCheck } from '@/hooks/useBanCheck';
 import { BannedScreen } from '@/components/BannedScreen';
 import {
@@ -635,6 +636,7 @@ export default function ChatLayout() {
               <TagSelector />
               <ThemeSelector />
             </div>
+            <AccessibilityMenu />
             <ProfileSettings />
             <NotificationBell />
             {isAdmin && (
