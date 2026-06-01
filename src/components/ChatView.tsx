@@ -143,7 +143,7 @@ export default function ChatView() {
   };
 
   const setupRealtimeSubscription = () => {
-    const channel = supabase.channel(`messages:${connectionId}`)
+    const channel = supabase.channel(`messages-${connectionId}-${user?.id}-${Date.now()}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `connection_id=eq.${connectionId}` },
         (payload) => {
           const newMsg = payload.new as Message;
@@ -220,7 +220,8 @@ export default function ChatView() {
         return;
       }
 
-      await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'image', media_url: urlData.publicUrl });
+      const { data: inserted } = await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'image', media_url: urlData.publicUrl }).select().single();
+      if (inserted) setMessages((prev) => prev.some(m => m.id === inserted.id) ? prev : [...prev, inserted as Message]);
     } catch {
       if (uploadedPath) await supabase.storage.from('chat-media').remove([uploadedPath]);
       toast({ title: "Upload failed", variant: "destructive" });
@@ -258,7 +259,8 @@ export default function ChatView() {
       const fileName = `${user.id}/${Date.now()}-voice.webm`;
       await supabase.storage.from('chat-media').upload(fileName, audioBlob);
       const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(fileName);
-      await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'voice', media_url: urlData.publicUrl });
+      const { data: inserted } = await supabase.from('messages').insert({ connection_id: connectionId, sender_id: user.id, content: '', message_type: 'voice', media_url: urlData.publicUrl }).select().single();
+      if (inserted) setMessages((prev) => prev.some(m => m.id === inserted.id) ? prev : [...prev, inserted as Message]);
     } catch { toast({ title: "Upload failed", variant: "destructive" }); }
     finally { setSending(false); audioChunksRef.current = []; }
   };
