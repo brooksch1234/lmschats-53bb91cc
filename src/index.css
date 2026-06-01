@@ -312,3 +312,50 @@ body[data-theme-anim="candy"]::before {
   0%, 100% { opacity: 0.35; transform: scale(1); }
   50% { opacity: 0.65; transform: scale(1.08); }
 }
+
+/* ============ Accessibility toggles ============ */
+html[data-font-size="large"] { font-size: 17.5px; }
+html[data-font-size="xlarge"] { font-size: 19px; }
+
+html.a11y-reduced-motion *,
+html.a11y-reduced-motion *::before,
+html.a11y-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+html.a11y-reduced-motion body::before,
+html.a11y-reduced-motion body::after {
+  animation: none !important;
+}
+
+html.a11y-contrast {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 5%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 55 100% 60%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 85%;
+  --accent: 55 100% 60%;
+  --accent-foreground: 0 0% 0%;
+  --border: 0 0% 60%;
+  --input: 0 0% 18%;
+  --ring: 55 100% 60%;
+}
+html.a11y-contrast body::before,
+html.a11y-contrast body::after { display: none !important; }
+html.a11y-contrast * { text-shadow: none !important; }
+
+html.a11y-dyslexic,
+html.a11y-dyslexic body,
+html.a11y-dyslexic * {
+  font-family: 'Atkinson Hyperlegible', 'Verdana', 'Tahoma', sans-serif !important;
+  letter-spacing: 0.02em;
+}

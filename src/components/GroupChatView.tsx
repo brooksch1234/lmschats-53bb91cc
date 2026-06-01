@@ -131,7 +131,7 @@ export default function GroupChatView() {
   };
 
   const setupRealtimeSubscription = () => {
-    const channel = supabase.channel(`group:${groupId}`)
+    const channel = supabase.channel(`group-${groupId}-${user?.id}-${Date.now()}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` },
         async (payload) => {
           const newMsg = payload.new as GroupMessage;
@@ -174,9 +174,15 @@ export default function GroupChatView() {
     }
     setSending(true);
     stopTyping();
-    const { error } = await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, content: newMessage.trim(), message_type: 'text' });
+    const { data: inserted, error } = await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, content: newMessage.trim(), message_type: 'text' }).select().single();
     if (error) toast({ title: "Failed to send", description: error.message, variant: "destructive" });
-    else setNewMessage('');
+    else {
+      setNewMessage('');
+      if (inserted) {
+        const { data: profile } = await supabase.from('profiles').select('id, username').eq('id', user.id).maybeSingle();
+        setMessages((prev) => prev.some(m => m.id === inserted.id) ? prev : [...prev, { ...(inserted as GroupMessage), sender: profile || undefined }]);
+      }
+    }
     setSending(false);
   };
 
@@ -207,7 +213,11 @@ export default function GroupChatView() {
         return;
       }
 
-      await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, message_type: 'image', media_url: urlData.publicUrl });
+      const { data: inserted } = await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, message_type: 'image', media_url: urlData.publicUrl }).select().single();
+      if (inserted) {
+        const { data: profile } = await supabase.from('profiles').select('id, username').eq('id', user.id).maybeSingle();
+        setMessages((prev) => prev.some(m => m.id === inserted.id) ? prev : [...prev, { ...(inserted as GroupMessage), sender: profile || undefined }]);
+      }
     } catch {
       if (uploadedPath) await supabase.storage.from('chat-media').remove([uploadedPath]);
       toast({ title: "Upload failed", variant: "destructive" });
@@ -245,7 +255,11 @@ export default function GroupChatView() {
       const fileName = `${user.id}/${Date.now()}-voice.webm`;
       await supabase.storage.from('chat-media').upload(fileName, audioBlob);
       const { data: urlData } = supabase.storage.from('chat-media').getPublicUrl(fileName);
-      await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, message_type: 'voice', media_url: urlData.publicUrl });
+      const { data: inserted } = await supabase.from('group_messages').insert({ group_id: groupId, sender_id: user.id, message_type: 'voice', media_url: urlData.publicUrl }).select().single();
+      if (inserted) {
+        const { data: profile } = await supabase.from('profiles').select('id, username').eq('id', user.id).maybeSingle();
+        setMessages((prev) => prev.some(m => m.id === inserted.id) ? prev : [...prev, { ...(inserted as GroupMessage), sender: profile || undefined }]);
+      }
     } catch { toast({ title: "Upload failed", variant: "destructive" }); }
     finally { setSending(false); audioChunksRef.current = []; }
   };

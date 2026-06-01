@@ -1,0 +1,2 @@
+ALTER TABLE public.messages REPLICA IDENTITY FULL;
+ALTER TABLE public.group_messages REPLICA IDENTITY FULL;
