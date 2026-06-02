@@ -147,148 +147,180 @@ body[data-theme-anim]::before,
 body[data-theme-anim]::after {
   content: '';
   position: fixed;
-  inset: -10%;
+  inset: -15%;
   z-index: 9999;
   pointer-events: none;
-  background-size: 300% 300%;
-  will-change: background-position, transform, opacity;
+  background-size: 400% 400%;
+  will-change: background-position, transform, opacity, filter;
+  filter: saturate(1.15);
 }
 body[data-theme-anim]::before {
-  opacity: 0.42;
+  opacity: 0.62;
   mix-blend-mode: screen;
-  animation: themeGradient 14s ease-in-out infinite;
+  animation: themeGradient 9s ease-in-out infinite;
 }
 body[data-theme-anim]::after { opacity: 0; }
 
 /* Aurora */
 body[data-theme-anim="aurora"]::before {
   background-image: linear-gradient(135deg, #0f0c29, #302b63, #6a3093, #24243e, #0f0c29);
-  animation-duration: 10s;
-  opacity: 0.5;
+  animation-duration: 8s;
+  opacity: 0.62;
 }
 body[data-theme-anim="aurora"]::after {
-  background: radial-gradient(circle at 20% 30%, #a78bfa 0%, transparent 40%),
-              radial-gradient(circle at 80% 70%, #22d3ee 0%, transparent 40%);
-  opacity: 0.4;
+  background: radial-gradient(circle at 20% 30%, #a78bfa 0%, transparent 45%),
+              radial-gradient(circle at 80% 70%, #22d3ee 0%, transparent 45%),
+              radial-gradient(circle at 50% 50%, #f0abfc 0%, transparent 35%);
+  opacity: 0.55;
   mix-blend-mode: screen;
-  animation: drift 12s ease-in-out infinite alternate;
+  animation: drift 9s ease-in-out infinite alternate;
 }
 
 /* Cyberpunk */
 body[data-theme-anim="cyberpunk"]::before {
   background-image: linear-gradient(135deg, #1a0033, #ff0080, #00ffe0, #ff0080, #1a0033);
-  animation-duration: 7s;
+  animation-duration: 5s;
   animation-timing-function: linear;
-  opacity: 0.55;
+  opacity: 0.7;
 }
 body[data-theme-anim="cyberpunk"]::after {
-  background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,255,224,0.10) 3px 4px);
-  opacity: 0.6;
-  animation: scanlines 4s linear infinite;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,255,224,0.18) 3px 4px),
+              radial-gradient(circle at 30% 30%, rgba(255,0,128,0.4) 0%, transparent 40%);
+  opacity: 0.75;
+  animation: scanlines 2.5s linear infinite;
 }
 
 /* Galaxy */
 body[data-theme-anim="galaxy"]::before {
   background-image: linear-gradient(135deg, #000428, #004e92, #2a0845, #6441a5, #000428);
-  animation-duration: 20s;
-  opacity: 0.5;
+  animation-duration: 14s;
+  opacity: 0.65;
 }
 body[data-theme-anim="galaxy"]::after {
   background: radial-gradient(circle at 30% 40%, #fff 0%, transparent 2%),
               radial-gradient(circle at 70% 60%, #fff 0%, transparent 1.5%),
               radial-gradient(circle at 50% 20%, #fff 0%, transparent 1%),
               radial-gradient(circle at 80% 30%, #fff 0%, transparent 1%),
-              radial-gradient(circle at 15% 75%, #fff 0%, transparent 1.2%);
-  opacity: 0.7;
-  animation: twinkle 4s ease-in-out infinite alternate;
+              radial-gradient(circle at 15% 75%, #fff 0%, transparent 1.2%),
+              radial-gradient(circle at 90% 85%, #fff 0%, transparent 1.3%),
+              radial-gradient(circle at 40% 90%, #fff 0%, transparent 0.8%);
+  opacity: 0.85;
+  animation: twinkle 2.5s ease-in-out infinite alternate;
 }
 
 /* Sunset Blaze */
 body[data-theme-anim="sunset"]::before {
   background-image: linear-gradient(135deg, #ff512f, #f09819, #dd2476, #ff512f);
-  animation-duration: 9s;
+  animation-duration: 7s;
+  opacity: 0.7;
+}
+body[data-theme-anim="sunset"]::after {
+  background: radial-gradient(circle at 70% 20%, #ffd700 0%, transparent 40%),
+              radial-gradient(circle at 30% 80%, #ff1493 0%, transparent 40%);
   opacity: 0.5;
+  mix-blend-mode: screen;
+  animation: drift 8s ease-in-out infinite alternate;
 }
 
 /* Ocean Waves */
 body[data-theme-anim="ocean"]::before {
   background-image: linear-gradient(135deg, #001f3f, #0077be, #00d4ff, #0077be, #001f3f);
-  animation-duration: 12s;
-  opacity: 0.5;
+  animation-duration: 9s;
+  opacity: 0.65;
 }
 body[data-theme-anim="ocean"]::after {
-  background: radial-gradient(ellipse at 50% 120%, #00d4ff 0%, transparent 50%);
-  opacity: 0.4;
+  background: radial-gradient(ellipse at 50% 120%, #00d4ff 0%, transparent 55%),
+              radial-gradient(ellipse at 20% 80%, #5eead4 0%, transparent 40%);
+  opacity: 0.55;
   mix-blend-mode: screen;
-  animation: drift 10s ease-in-out infinite alternate;
+  animation: drift 7s ease-in-out infinite alternate;
 }
 
 /* Lava */
 body[data-theme-anim="lava"]::before {
   background-image: linear-gradient(135deg, #200000, #ff3300, #ffcc00, #ff3300, #200000);
-  animation-duration: 8s;
-  opacity: 0.55;
+  animation-duration: 6s;
+  opacity: 0.72;
 }
 body[data-theme-anim="lava"]::after {
-  background: radial-gradient(circle at 30% 80%, #ff6600 0%, transparent 35%),
-              radial-gradient(circle at 70% 90%, #ffcc00 0%, transparent 30%);
-  opacity: 0.45;
+  background: radial-gradient(circle at 30% 80%, #ff6600 0%, transparent 40%),
+              radial-gradient(circle at 70% 90%, #ffcc00 0%, transparent 35%),
+              radial-gradient(circle at 50% 60%, #ff3300 0%, transparent 30%);
+  opacity: 0.6;
   mix-blend-mode: screen;
-  animation: drift 6s ease-in-out infinite alternate;
+  animation: emberPulse 2.5s ease-in-out infinite;
 }
 
 /* Mint Breeze */
 body[data-theme-anim="mint"]::before {
   background-image: linear-gradient(135deg, #003e2b, #00b894, #6ef3c0, #00b894, #003e2b);
-  animation-duration: 13s;
-  opacity: 0.5;
+  animation-duration: 10s;
+  opacity: 0.65;
+}
+body[data-theme-anim="mint"]::after {
+  background: radial-gradient(circle at 30% 30%, #6ef3c0 0%, transparent 40%),
+              radial-gradient(circle at 70% 70%, #14b8a6 0%, transparent 40%);
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  animation: drift 9s ease-in-out infinite alternate;
 }
 
 /* Bubblegum */
 body[data-theme-anim="bubblegum"]::before {
   background-image: linear-gradient(135deg, #ff6ec4, #7873f5, #ff6ec4, #ffc1e3);
-  animation-duration: 10s;
-  opacity: 0.5;
+  animation-duration: 7s;
+  opacity: 0.65;
 }
 body[data-theme-anim="bubblegum"]::after {
-  background: radial-gradient(circle at 20% 30%, #ffc1e3 0%, transparent 25%),
-              radial-gradient(circle at 80% 70%, #7873f5 0%, transparent 25%);
-  opacity: 0.4;
+  background: radial-gradient(circle at 20% 30%, #ffc1e3 0%, transparent 30%),
+              radial-gradient(circle at 80% 70%, #7873f5 0%, transparent 30%),
+              radial-gradient(circle at 50% 90%, #ff6ec4 0%, transparent 25%);
+  opacity: 0.55;
   mix-blend-mode: screen;
-  animation: drift 9s ease-in-out infinite alternate;
+  animation: drift 6s ease-in-out infinite alternate;
 }
 
 /* Matrix */
 body[data-theme-anim="matrix"]::before {
   background-image: linear-gradient(180deg, #000000, #001a00, #003300, #001a00, #000000);
-  animation-duration: 18s;
+  animation-duration: 12s;
   animation-timing-function: linear;
-  opacity: 0.55;
+  opacity: 0.7;
 }
 body[data-theme-anim="matrix"]::after {
-  background: repeating-linear-gradient(0deg, transparent 0 4px, rgba(0,255,70,0.15) 4px 5px);
-  opacity: 0.7;
-  animation: scanlines 2s linear infinite;
+  background: repeating-linear-gradient(0deg, transparent 0 4px, rgba(0,255,70,0.22) 4px 5px),
+              linear-gradient(180deg, transparent 0%, rgba(0,255,70,0.08) 50%, transparent 100%);
+  opacity: 0.85;
+  animation: scanlines 1.2s linear infinite;
 }
 
 /* Volcano */
 body[data-theme-anim="volcano"]::before {
   background-image: linear-gradient(180deg, #1a0000, #4d0000, #ff2200, #4d0000, #1a0000);
-  animation-duration: 11s;
-  opacity: 0.5;
+  animation-duration: 8s;
+  opacity: 0.7;
 }
 body[data-theme-anim="volcano"]::after {
-  background: radial-gradient(circle at 50% 100%, #ff4400 0%, transparent 50%);
-  opacity: 0.5;
+  background: radial-gradient(circle at 50% 100%, #ff4400 0%, transparent 55%),
+              radial-gradient(circle at 30% 90%, #ffaa00 0%, transparent 30%);
+  opacity: 0.65;
   mix-blend-mode: screen;
-  animation: emberPulse 3s ease-in-out infinite;
+  animation: emberPulse 2s ease-in-out infinite;
 }
 
 /* Candy */
 body[data-theme-anim="candy"]::before {
   background-image: linear-gradient(135deg, #fceabb, #f8b500, #ff6b9d, #c779d0, #4bc0c8);
-  animation-duration: 12s;
+  animation-duration: 8s;
+  opacity: 0.65;
+}
+body[data-theme-anim="candy"]::after {
+  background: radial-gradient(circle at 25% 25%, #ff6b9d 0%, transparent 30%),
+              radial-gradient(circle at 75% 75%, #4bc0c8 0%, transparent 30%),
+              radial-gradient(circle at 50% 50%, #f8b500 0%, transparent 25%);
   opacity: 0.5;
+  mix-blend-mode: screen;
+  animation: drift 7s ease-in-out infinite alternate;
 }
 
 @keyframes themeGradient {
@@ -297,21 +329,34 @@ body[data-theme-anim="candy"]::before {
   100% { background-position: 0% 50%; }
 }
 @keyframes drift {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(3%, -2%) scale(1.06); }
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { transform: translate(4%, -3%) scale(1.1) rotate(2deg); }
 }
 @keyframes twinkle {
-  0% { opacity: 0.3; }
-  100% { opacity: 0.85; }
+  0% { opacity: 0.35; transform: scale(1); }
+  100% { opacity: 0.95; transform: scale(1.05); }
 }
 @keyframes scanlines {
   0% { background-position: 0 0; }
   100% { background-position: 0 100%; }
 }
 @keyframes emberPulse {
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50% { opacity: 0.65; transform: scale(1.08); }
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.12); }
 }
+
+/* Smooth global transitions */
+button, a, [role="button"] {
+  transition: transform 0.18s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+button:active, [role="button"]:active { transform: scale(0.97); }
+
+/* Smooth page transitions for route content */
+main, [data-route-content] {
+  animation: fadeIn 0.35s ease-out;
+}
+
+
 
 /* ============ Accessibility toggles ============ */
 html[data-font-size="large"] { font-size: 17.5px; }
