@@ -147,24 +147,25 @@ body[data-theme-anim]::before,
 body[data-theme-anim]::after {
   content: '';
   position: fixed;
-  inset: -10%;
+  inset: -15%;
   z-index: 9999;
   pointer-events: none;
-  background-size: 300% 300%;
-  will-change: background-position, transform, opacity;
+  background-size: 400% 400%;
+  will-change: background-position, transform, opacity, filter;
+  filter: saturate(1.15);
 }
 body[data-theme-anim]::before {
-  opacity: 0.42;
+  opacity: 0.62;
   mix-blend-mode: screen;
-  animation: themeGradient 14s ease-in-out infinite;
+  animation: themeGradient 9s ease-in-out infinite;
 }
 body[data-theme-anim]::after { opacity: 0; }
 
 /* Aurora */
 body[data-theme-anim="aurora"]::before {
   background-image: linear-gradient(135deg, #0f0c29, #302b63, #6a3093, #24243e, #0f0c29);
-  animation-duration: 10s;
-  opacity: 0.5;
+  animation-duration: 8s;
+  opacity: 0.62;
 }
 body[data-theme-anim="aurora"]::after {
   background: radial-gradient(circle at 20% 30%, #a78bfa 0%, transparent 40%),
