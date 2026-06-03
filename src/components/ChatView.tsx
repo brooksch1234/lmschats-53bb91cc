@@ -27,6 +27,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { ChatGamePicker } from '@/components/games/ChatGamePicker';
+import { ChatGameMessage } from '@/components/games/ChatGameMessage';
 
 interface Message {
   id: string;
