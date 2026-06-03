@@ -400,6 +400,9 @@ export default function ChatView() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}><Image className="w-5 h-5" /></Button>
             <Button variant="ghost" size="icon" onClick={startRecording} disabled={sending}><Mic className="w-5 h-5" /></Button>
+            {connectionId && otherUser && (
+              <ChatGamePicker connectionId={connectionId} otherUserId={otherUser.id} disabled={sending} />
+            )}
             <div className="flex-1 relative">
               <Input 
                 placeholder="Type a message..." 
