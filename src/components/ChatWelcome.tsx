@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import {
   MessageCircle, UserPlus, Hash, Palette, Users, Gamepad2,
-  ShoppingBag, Sparkles, Copy, Check, ArrowRight, Globe, Bell, Zap,
+  ShoppingBag, Sparkles, Copy, Check, ArrowRight, Globe,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { OnlineIndicator } from '@/components/OnlineIndicator';
+
 
 interface RecentChat {
   id: string;
