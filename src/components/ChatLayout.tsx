@@ -515,7 +515,7 @@ export default function ChatLayout() {
             {/* Add Friends */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 h-8">
+                <Button variant="ghost" size="sm" className="gap-2 h-8" data-add-friend-trigger>
                   <UserPlus className="w-4 h-4 text-primary" />
                   <span className="hidden md:inline text-xs">Add Friend</span>
                 </Button>
