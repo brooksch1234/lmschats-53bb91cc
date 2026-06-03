@@ -16,7 +16,7 @@ export function OnlineIndicator({ userId, showText = false, size = 'sm' }: Onlin
     fetchLastSeen();
     
     const channel = supabase
-      .channel(`presence:${userId}`)
+      .channel(`online-${userId}-${Math.random().toString(36).slice(2, 9)}`)
       .on('postgres_changes', 
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
         (payload: any) => {
