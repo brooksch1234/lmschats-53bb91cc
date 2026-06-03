@@ -282,32 +282,15 @@ export default function ChatWelcome() {
             }}
           />
 
-          {/* Games (inside chats) */}
+          {/* Mini-Games (request from inside chat) */}
           <ActionTile
             icon={Gamepad2}
             label="Mini-Games"
-            sub="Open inside a chat"
+            sub="Challenge a friend"
             accent="from-emerald-500/30 to-teal-500/5"
-            onClick={() => toast({ title: 'Mini-Games', description: 'Open a chat and tap the games icon to play.' })}
+            onClick={() => toast({ title: 'Mini-Games', description: 'Open any chat and tap the gamepad icon to challenge them.' })}
           />
 
-          {/* Shop */}
-          <ActionTile
-            icon={ShoppingBag}
-            label="Shop"
-            sub="Merch & perks"
-            accent="from-orange-500/30 to-amber-500/5"
-            onClick={() => navigate('/shop')}
-          />
-
-          {/* Proxy / web */}
-          <ActionTile
-            icon={Globe}
-            label="Web Proxy"
-            sub="Bypass filters"
-            accent="from-indigo-500/30 to-blue-500/5"
-            onClick={() => toast({ title: 'Web Proxy', description: 'Available inside a chat composer.' })}
-          />
 
         </div>
 
