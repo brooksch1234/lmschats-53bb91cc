@@ -282,16 +282,13 @@ export default function ChatWelcome() {
             }}
           />
 
-          {/* Games */}
+          {/* Games (inside chats) */}
           <ActionTile
             icon={Gamepad2}
             label="Mini-Games"
-            sub="Play instantly"
+            sub="Open inside a chat"
             accent="from-emerald-500/30 to-teal-500/5"
-            onClick={() => {
-              const btn = document.querySelector<HTMLButtonElement>('[data-games-trigger]');
-              btn?.click();
-            }}
+            onClick={() => toast({ title: 'Mini-Games', description: 'Open a chat and tap the games icon to play.' })}
           />
 
           {/* Shop */}
@@ -309,11 +306,9 @@ export default function ChatWelcome() {
             label="Web Proxy"
             sub="Bypass filters"
             accent="from-indigo-500/30 to-blue-500/5"
-            onClick={() => {
-              const btn = document.querySelector<HTMLButtonElement>('[data-proxy-trigger]');
-              btn?.click();
-            }}
+            onClick={() => toast({ title: 'Web Proxy', description: 'Available inside a chat composer.' })}
           />
+
         </div>
 
         <p className="text-[11px] text-muted-foreground/60 mt-8 text-center font-mono">
