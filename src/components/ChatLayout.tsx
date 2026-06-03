@@ -656,7 +656,8 @@ export default function ChatLayout() {
       <BetaTagPopup />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Chat List */}
+        {/* Left Sidebar - only when inside a chat */}
+        {(activeConnectionId || activeGroupId) && (
         <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} md:w-80 shrink-0 border-r border-border/50 glass-card transition-all duration-300 overflow-hidden`}>
           <ScrollArea className="h-full">
             <div className="p-3 space-y-4">
