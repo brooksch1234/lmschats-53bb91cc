@@ -515,7 +515,7 @@ export default function ChatLayout() {
             {/* Add Friends */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 h-8">
+                <Button variant="ghost" size="sm" className="gap-2 h-8" data-add-friend-trigger>
                   <UserPlus className="w-4 h-4 text-primary" />
                   <span className="hidden md:inline text-xs">Add Friend</span>
                 </Button>
@@ -656,7 +656,8 @@ export default function ChatLayout() {
       <BetaTagPopup />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Chat List */}
+        {/* Left Sidebar - only when inside a chat */}
+        {(activeConnectionId || activeGroupId) && (
         <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} md:w-80 shrink-0 border-r border-border/50 glass-card transition-all duration-300 overflow-hidden`}>
           <ScrollArea className="h-full">
             <div className="p-3 space-y-4">
@@ -785,6 +786,7 @@ export default function ChatLayout() {
             </div>
           </ScrollArea>
         </aside>
+        )}
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden">
