@@ -226,7 +226,7 @@ export function ThemeSelector() {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" data-theme-trigger>
             <Palette className="w-5 h-5" />
           </Button>
         </DialogTrigger>
