@@ -156,7 +156,7 @@ export function CreateGroupDialog({ onGroupCreated }: CreateGroupDialogProps) {
 
   return (
     <>
-      <Button variant="outline" className="w-full relative" size="lg" onClick={handleOpenDialog}>
+      <Button variant="outline" data-create-group-trigger className="w-full relative" size="lg" onClick={handleOpenDialog}>
         <Users className="w-5 h-5 mr-2" />
         Create Group Chat
         {!isPremium && <Crown className="w-4 h-4 ml-2 text-yellow-500" />}
