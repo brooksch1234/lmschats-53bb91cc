@@ -27,6 +27,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { ChatGamePicker } from '@/components/games/ChatGamePicker';
+import { ChatGameMessage } from '@/components/games/ChatGameMessage';
 
 interface Message {
   id: string;
@@ -365,6 +367,7 @@ export default function ChatView() {
 
                         {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
                         {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
+                        {message.message_type === 'game' && message.media_url && <ChatGameMessage gameId={message.media_url} isOwn={isOwn} />}
                         <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
                         <MessageReactions messageId={message.id} isOwn={isOwn} />
                       </div>
@@ -397,6 +400,9 @@ export default function ChatView() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={sending}><Image className="w-5 h-5" /></Button>
             <Button variant="ghost" size="icon" onClick={startRecording} disabled={sending}><Mic className="w-5 h-5" /></Button>
+            {connectionId && otherUser && (
+              <ChatGamePicker connectionId={connectionId} otherUserId={otherUser.id} disabled={sending} />
+            )}
             <div className="flex-1 relative">
               <Input 
                 placeholder="Type a message..." 

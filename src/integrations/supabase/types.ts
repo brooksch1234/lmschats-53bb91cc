@@ -38,6 +38,48 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_games: {
+        Row: {
+          connection_id: string
+          created_at: string
+          current_turn: string | null
+          game_type: string
+          id: string
+          player1_id: string
+          player2_id: string
+          state: Json
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          current_turn?: string | null
+          game_type: string
+          id?: string
+          player1_id: string
+          player2_id: string
+          state?: Json
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          current_turn?: string | null
+          game_type?: string
+          id?: string
+          player1_id?: string
+          player2_id?: string
+          state?: Json
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
       connections: {
         Row: {
           created_at: string
