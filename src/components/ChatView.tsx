@@ -367,6 +367,7 @@ export default function ChatView() {
 
                         {message.message_type === 'image' && message.media_url && <img src={message.media_url} alt="Shared" className="max-w-full rounded-lg" style={{ maxHeight: '300px' }} />}
                         {message.message_type === 'voice' && message.media_url && <audio controls className="max-w-full"><source src={message.media_url} type="audio/webm" /></audio>}
+                        {message.message_type === 'game' && message.media_url && <ChatGameMessage gameId={message.media_url} isOwn={isOwn} />}
                         <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{format(new Date(message.created_at), 'h:mm a')}</p>
                         <MessageReactions messageId={message.id} isOwn={isOwn} />
                       </div>
