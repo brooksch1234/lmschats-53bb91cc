@@ -786,6 +786,7 @@ export default function ChatLayout() {
             </div>
           </ScrollArea>
         </aside>
+        )}
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden">
