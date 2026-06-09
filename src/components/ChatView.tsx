@@ -307,11 +307,22 @@ export default function ChatView() {
               {otherUser && <OnlineIndicator userId={otherUser.id} showText />}
             </div>
           </div>
-          <ChatSearch 
-            messages={messages.filter(m => m.message_type === 'text')} 
-            onResultClick={scrollToMessage}
-            senderNames={senderNames}
-          />
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              title={isPremium ? 'Voice call' : 'Premium only'}
+              onClick={() => otherUser && connectionId && startCall(connectionId, otherUser.id, otherUser.username)}
+              disabled={!otherUser}
+            >
+              <Phone className="w-5 h-5" />
+            </Button>
+            <ChatSearch 
+              messages={messages.filter(m => m.message_type === 'text')} 
+              onResultClick={scrollToMessage}
+              senderNames={senderNames}
+            />
+          </div>
         </div>
       </div>
 
