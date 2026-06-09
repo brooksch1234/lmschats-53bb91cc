@@ -76,6 +76,8 @@ export default function ChatView() {
   );
 
   const { tags: otherUserTags } = useUserTags(otherUser?.id);
+  const { startCall } = useCall();
+  const { isPremium } = usePremium();
 
   const scrollToMessage = (messageId: string) => {
     const el = messageRefs.current[messageId];
