@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PremiumProvider } from "@/hooks/usePremium";
 import { AccessibilityProvider } from "@/hooks/useAccessibility";
+import { CallProvider } from "@/hooks/useCall";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ChatLayout from "./components/ChatLayout";
