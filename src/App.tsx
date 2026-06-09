@@ -30,26 +30,28 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/chats" element={<ChatLayout />}>
-                  <Route index element={<ChatWelcome />} />
-                  <Route path="chat/:connectionId" element={<ChatView />} />
-                  <Route path="group/:groupId" element={<GroupChatView />} />
-                </Route>
-                <Route path="/chat/:connectionId" element={<ChatLayout />}>
-                  <Route index element={<ChatView />} />
-                </Route>
-                <Route path="/group/:groupId" element={<ChatLayout />}>
-                  <Route index element={<GroupChatView />} />
-                </Route>
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/shop/product/:handle" element={<ProductDetail />} />
+              <CallProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/chats" element={<ChatLayout />}>
+                    <Route index element={<ChatWelcome />} />
+                    <Route path="chat/:connectionId" element={<ChatView />} />
+                    <Route path="group/:groupId" element={<GroupChatView />} />
+                  </Route>
+                  <Route path="/chat/:connectionId" element={<ChatLayout />}>
+                    <Route index element={<ChatView />} />
+                  </Route>
+                  <Route path="/group/:groupId" element={<ChatLayout />}>
+                    <Route index element={<GroupChatView />} />
+                  </Route>
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/shop/product/:handle" element={<ProductDetail />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </CallProvider>
             </BrowserRouter>
           </TooltipProvider>
         </AccessibilityProvider>
