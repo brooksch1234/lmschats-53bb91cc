@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      call_sessions: {
+        Row: {
+          callee_id: string
+          caller_id: string
+          connection_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          callee_id: string
+          caller_id: string
+          connection_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          callee_id?: string
+          caller_id?: string
+          connection_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       chat_games: {
         Row: {
           connection_id: string
