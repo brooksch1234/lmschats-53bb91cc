@@ -28,6 +28,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageReactions } from '@/components/MessageReactions';
 import { CreatePollDialog } from '@/components/CreatePollDialog';
 import { PollCard } from '@/components/PollCard';
+import { WindowControls } from '@/components/WindowControls';
+
 
 interface GroupMessage {
   id: string;
