@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Image, Mic, Square, Trash2, Phone } from 'lucide-react';
+import { Send, Image, Mic, Square, Trash2, Phone, Video } from 'lucide-react';
 import { useCall } from '@/hooks/useCall';
 import { usePremium } from '@/hooks/usePremium';
 import { format } from 'date-fns';
