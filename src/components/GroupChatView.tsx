@@ -340,30 +340,36 @@ export default function GroupChatView() {
               <p className="text-xs text-muted-foreground">{groupInfo?.member_count || 0} members</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            {groupId && <CreatePollDialog groupId={groupId} onPollCreated={fetchPolls} />}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" title="Leave group" className="text-red-500 hover:text-red-400">
-                  <LogOut className="w-5 h-5" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Leave this group?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    You'll stop receiving messages and need to be re-added to rejoin.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLeave} className="bg-red-600 hover:bg-red-500">
-                    Leave
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {groupId && <CreatePollDialog groupId={groupId} onPollCreated={fetchPolls} />}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" title="Leave group" className="text-red-500 hover:text-red-400">
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Leave this group?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You'll stop receiving messages and need to be re-added to rejoin.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLeave} className="bg-red-600 hover:bg-red-500">
+                      Leave
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            <div className="pl-2 border-l border-border/50">
+              <WindowControls />
+            </div>
           </div>
+
         </div>
       </div>
 
