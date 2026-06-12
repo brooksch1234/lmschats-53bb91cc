@@ -40,6 +40,7 @@ export type Database = {
       }
       call_sessions: {
         Row: {
+          call_type: string
           callee_id: string
           caller_id: string
           connection_id: string
@@ -50,6 +51,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          call_type?: string
           callee_id: string
           caller_id: string
           connection_id: string
@@ -60,6 +62,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          call_type?: string
           callee_id?: string
           caller_id?: string
           connection_id?: string

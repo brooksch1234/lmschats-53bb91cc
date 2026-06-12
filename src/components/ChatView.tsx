@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Image, Mic, Square, Trash2, Phone } from 'lucide-react';
+import { Send, Image, Mic, Square, Trash2, Phone, Video } from 'lucide-react';
 import { useCall } from '@/hooks/useCall';
 import { usePremium } from '@/hooks/usePremium';
 import { format } from 'date-fns';
@@ -315,11 +315,21 @@ export default function ChatView() {
                 variant="ghost"
                 size="icon"
                 title={isPremium ? 'Voice call' : 'Premium only'}
-                onClick={() => otherUser && connectionId && startCall(connectionId, otherUser.id, otherUser.username)}
+                onClick={() => otherUser && connectionId && startCall(connectionId, otherUser.id, otherUser.username, 'audio')}
                 disabled={!otherUser}
               >
                 <Phone className="w-5 h-5" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                title={isPremium ? 'Video call (FaceTime)' : 'Premium only'}
+                onClick={() => otherUser && connectionId && startCall(connectionId, otherUser.id, otherUser.username, 'video')}
+                disabled={!otherUser}
+              >
+                <Video className="w-5 h-5" />
+              </Button>
+
               <ChatSearch 
                 messages={messages.filter(m => m.message_type === 'text')} 
                 onResultClick={scrollToMessage}
