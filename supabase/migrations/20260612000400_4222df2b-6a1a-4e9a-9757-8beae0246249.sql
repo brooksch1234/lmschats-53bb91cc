@@ -1,0 +1,1 @@
+ALTER TABLE public.call_sessions ADD COLUMN IF NOT EXISTS call_type text NOT NULL DEFAULT 'audio' CHECK (call_type IN ('audio','video'));
